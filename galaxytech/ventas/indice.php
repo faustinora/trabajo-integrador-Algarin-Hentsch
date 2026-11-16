@@ -4,59 +4,57 @@ if (!isset($_SESSION['usuario'])) {
     header("Location: ../login.php");
     exit();
 }
-require_once '../config/conexion.php';
-$conn = getConnection();
-$resClientes = $conn->query("SELECT id_cliente, apellido, nombre FROM clientes WHERE activo = 1 ORDER BY apellido ASC");
+$panelVolver = ($_SESSION['rol'] === 'admin') ? '../panelAdmin.php' : '../panelVendedor.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Ventas - GalaxyTech</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
 </head>
 <body>
-    <div class="admin-container" style="max-width: 950px;">
-        <a href="../principal.php" style="text-decoration: none; color: #666; font-size: 14px;">← Volver al Panel</a>
-        <h1>Gestión de Ventas</h1>
+    <main class="container contenedor-principal">
+        <a href="<?php echo $panelVolver; ?>" class="link-volver">← Volver al Panel</a>
 
-        <!-- Formulario -->
-        <form id="form-venta">
-            <label>Cliente:</label>
-            <select id="id_cliente" name="id_cliente" required style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-                <option value="">Seleccione un cliente...</option>
-                <?php while($cli = $resClientes->fetch_assoc()): ?>
-                    <option value="<?php echo $cli['id_cliente']; ?>">
-                        <?php echo htmlspecialchars($cli['apellido'] . ", " . $cli['nombre']); ?>
-                    </option>
-                <?php endwhile; ?>
-            </select>
+        <div class="header-gestion">
+            <h1>Gestión de Ventas</h1>
+            <a href="nueva.php" role="button">+ Nueva Venta</a>
+        </div>
 
-            <label>Monto Total ($):</label>
-            <input type="number" step="0.01" id="total" name="total" placeholder="0.00" required>
+        <div class="tarjeta-inventario">
+            <small>Recaudación Total de Ventas</small>
+            <h3 id="spanTotalVentas">$0.00</h3>
+        </div>
 
-            <button type="submit" id="btn-guardar-venta">Registrar</button>
-        </form>
+        <div class="buscador-inline-container">
+            <input type="text" id="inputBuscador" placeholder="Buscar por cliente, vendedor o fecha...">
+            <button type="button" id="btnBuscar">Buscar</button>
+        </div>
 
-        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+        <h3>Historial de Ventas</h3>
+        <div class="tabla-contenedor">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Vendedor</th>
+                        <th>Total</th>
+                        <th class="col-acciones">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-ventas-body"></tbody>
+            </table>
+        </div>
+        
+        <footer>
+            <small id="totalRegistros"><strong>Total:</strong> 0 ventas</small>
+        </footer>
+    </main>
 
-        <h3>Listado de Ventas Registradas</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Nro. Venta</th>
-                    <th>Cliente</th>
-                    <th>Total</th>
-                    <th>Fecha</th>
-                </tr>
-            </thead>
-            <tbody id="tabla-ventas-body">
-                <!-- Carga dinámica vía fetch -->
-            </tbody>
-        </table>
-    </div>
-
+    <div id="toastContainer"></div>
     <script src="../js/ventas.js"></script>
 </body>
 </html>
-<?php $conn->close(); ?>

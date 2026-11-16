@@ -1,0 +1,39 @@
+use galaxytech_db;
+
+
+INSERT INTO clientes (id_cliente, nombre, apellido, telefono, email, activo) VALUES
+(1, 'Consumidor', 'Final', '0000', '-', 1),
+(2, 'Empresa', 'Uso Interno', '-', 'interno@galaxytech.com', 1),
+
+//ALTER TABLE clientes AUTO_INCREMENT = 3;
+
+INSERT INTO clientes (nombre, apellido, telefono, email, activo) VALUES
+('Juan', 'Salvador', '3743401122', 'juan.salva@gmail.com', 1),
+('María', 'Gómez', '3743458899', 'maria.gomez@email.com', 1),
+('Carlos', 'Rodríguez', '3743493344', 'carlos.rodriguez@hotmail.com', 1);
+
+INSERT INTO usuarios (usuario, clave, rol, activo) VALUES
+('admin', '$2y$12$/hqhTQcjhYrgn8pBBa/9YuOT7dAYRW0gTe.Gl/xtNfNg1Eu21ssSO', 'admin', 1),
+('vendedor1', '$2y$12$KJ4waz85GpLbpB2qLL12duECUqTVpTHR5k3AbDnEGBoNmAxVQLXIO', 'vendedor', 1);
+
+
+INSERT INTO productos (codigo, nombre, descripcion, precio, stock, activo) VALUES
+('PROD001', 'Disco Sólido SSD 480GB', 'Disco SSD SATA3 Kingston A400 2.5"', 45000.00, 15, 1),
+('PROD002', 'Memoria RAM 8GB DDR4', 'Memoria RAM Kingston Fury Beast DDR4 2666MHz', 28500.00, 20, 1),
+('PROD003', 'Fuente 600W 80 Plus', 'Fuente de alimentación certificada 80 Plus Bronze', 62000.00, 8, 1);
+
+
+INSERT INTO servicios (id_cliente, id_usuario, equipo_descripcion, diagnostico, costo, estado, fecha_ingreso, fecha_entrega, activo) VALUES
+(3, 2, 'Notebook HP Pavilion', 'No enciende. Se realiza cambio de conector de carga y mantenimiento general.', 25000.00, 'en proceso', NOW(), NULL, 1),
+(4, 2, 'PC de Escritorio Banghó', 'Pantalla azul frecuente. Se reemplaza módulo de memoria RAM defectuoso.', 18000.00, 'en proceso', NOW(), NULL, 1),
+(5, 2, 'All in One Lenovo', 'Lentitud extrema en el sistema. Se recomienda instalación de SSD y limpieza interna.', 0.00, 'pendiente', NOW(), NULL, 1);
+
+
+INSERT INTO ventas (id_cliente, id_usuario, id_servicio, total, fecha_venta, activo) VALUES
+(1, 2, NULL, 45000.00, NOW(), 1),
+(4, 2, NULL, 57000.00, NOW(), 1);
+
+
+INSERT INTO detalle_ventas (id_venta, id_producto, cantidad, precio_unitario) VALUES
+(1, 1, 1, 45000.00),
+(2, 2, 2, 28500.00);

@@ -1,115 +1,161 @@
 document.addEventListener("DOMContentLoaded", () => {
-    cargarClientes();
+    cargarClientes(false);
 
-    const form = document.getElementById("form-cliente");
-    if (form) {
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const formData = new FormData(form);
+    const inputBuscador = document.getElementById("inputBuscador");
+    const selectEstado = document.getElementById("selectFiltroEstado");
+    const btnBuscar = document.getElementById("btnBuscar");
 
-            try {
-                const res = await fetch("../api/guardar_cliente.php", {
-                    method: "POST",
-                    body: formData
-                });
-                const data = await res.json();
-
-                if (data.status === "success") {
-                    alert(data.mensaje);
-                    limpiarFormulario();
-                    cargarClientes();
-                } else {
-                    alert("Error: " + data.mensaje);
-                }
-            } catch (err) {
-                console.error("Error:", err);
+    if (inputBuscador) {
+        inputBuscador.addEventListener("keydown", (e) => {
+            if(e.key === "Enter"){
+                e.preventDefault();
+                cargarClientes(true);
             }
         });
     }
+
+    if (btnBuscar) {
+        btnBuscar.addEventListener("click", (e) => {
+            e.preventDefault();
+            cargarClientes(true);
+        });
+    }
+
+    if (selectEstado) {
+        selectEstado.addEventListener("change", () => {
+            cargarClientes(false);
+        });
+    }
+
 });
 
-async function cargarClientes() {
+async function cargarClientes(avisar = false) {
     try {
-        const res = await fetch("../api/cliente.php");
+        const inputBuscador = document.getElementById("inputBuscador");
+        const selectEstado = document.getElementById("selectFiltroEstado");
+        
+        const termino = inputBuscador ? inputBuscador.value.trim() : "";
+        const estado = selectEstado ? selectEstado.value : "1";
+
+        let url = `../api/clientes/listar.php?status=${estado}`;
+        if (termino) {
+            url += `&q=${encodeURIComponent(termino)}`;
+        }
+
+        const res = await fetch(url);
         const data = await res.json();
+        const clientes = Array.isArray(data) ? data : (data.clientes || data.data || []);
 
         const tbody = document.getElementById("tabla-clientes-body");
+        const totalElem = document.getElementById("totalRegistros");
+        
+        if (avisar){
+            if (clientes.length > 0){
+                mostrarToast(`Se encontraron ${clientes.length} resultado(s).`, "exito");
+            } else{
+                mostrarToast("No se encontraron coincidencias.", "error");
+            }
+        }
+                
         if (!tbody) return;
+        
         tbody.innerHTML = "";
 
-        if (data.status === "success" && data.data.length > 0) {
-            data.data.forEach(cli => {
-                const tr = document.createElement("tr");
-                
-                tr.innerHTML = `
-                    <td>${cli.nombre}</td>
-                    <td>${cli.apellido}</td>
-                    <td>${cli.telefono}</td>
-                    <td>${cli.email}</td>
-                    <td>
-                        <button type="button" class="btn-editar">Editar</button>
-                        <button type="button" class="btn-eliminar" style="background-color: #c0392b; color: white;">Eliminar</button>
-                    </td>
-                `;
-
-                tr.querySelector(".btn-editar").addEventListener("click", () => {
-                    document.getElementById("id_cliente").value = cli.id_cliente;
-                    document.getElementById("nombre").value = cli.nombre;
-                    document.getElementById("apellido").value = cli.apellido;
-                    document.getElementById("telefono").value = cli.telefono;
-                    document.getElementById("email").value = cli.email;
-                    document.getElementById("btn-guardar").textContent = "Actualizar";
-                });
-                tr.querySelector(".btn-eliminar").addEventListener("click", () =>{
-                    darDeBaja(cli.id_cliente);
-                });
-                tbody.appendChild(tr);
-            });
-        } else {
-            tbody.innerHTML = "<tr><td colspan='4'>No hay clientes registrados.</td></tr>";
+        if (clientes.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='5' style='text-align: center;'>No se encontraron clientes.</td></tr>";
+            if (totalElem) totalElem.innerHTML = "<strong>Total:</strong> 0 clientes";
+            return;
         }
+
+        clientes.forEach(c => {
+            const idCli = c.id_cliente;
+            const esActivo = parseInt(c.activo) === 1;
+            const nombreCompleto = `${escapeHtml(c.nombre)} ${escapeHtml(c.apellido)}`;
+
+            const badgeEstado = esActivo 
+                ? '<span style="background-color: #bbf7d0; color: #166534; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">Activo</span>'
+                : '<span style="background-color: #fecaca; color: #991b1b; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">Inactivo</span>';
+
+            const accionesHtml = esActivo
+                ? `<a href="editar.php?id=${idCli}" class="secondary btn-tabla-editar">Editar</a>
+                   <button onclick="eliminarCliente(${idCli}, '${nombreCompleto}')" class="btn-tabla-eliminar">Dar de baja</button>`
+                : `<button onclick="habilitarCliente(${idCli}, '${nombreCompleto}')" style="background-color: #16a34a; border-color: #16a34a; color: white; padding: 4px 10px; font-size: 0.8rem; border-radius: 4px; cursor: pointer; margin: 0;">Habilitar</button>`;
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${nombreCompleto}</td>
+                <td>${escapeHtml(c.telefono)}</td>
+                <td>${escapeHtml(c.email)}</td>
+                <td>${badgeEstado}</td>
+                <td class="col-acciones">
+                    ${accionesHtml}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        if (totalElem) totalElem.innerHTML = `<strong>Total:</strong> ${clientes.length} cliente(s)`;
     } catch (err) {
-        console.error("Error al cargar:", err);
+        console.error("Error al cargar clientes:", err);
+        mostrarToast("Error al cargar clientes.", "error");
     }
 }
 
-function prepararEdicion(id, nombre, apellido, telefono, email) {
-    document.getElementById("id_cliente").value = id;
-    document.getElementById("nombre").value = nombre;
-    document.getElementById("apellido").value = apellido;
-    document.getElementById("telefono").value = telefono;
-    document.getElementById("email").value = email;
-    
-    document.getElementById("btn-guardar").textContent = "Actualizar";
-}
-
-function limpiarFormulario(){
-    const form = document.getElementById("form-cliente");
-    if (form) form.reset();
-    document.getElementById("id_cliente").value = "";
-    document.getElementById("btn-guardar").textContent = "Guardar";
-}
-
-async function darDeBaja(id) {
-    if (!confirm("¿Confirmar baja del cliente?")) return;
-
-    const formData = new FormData();
-    formData.append("id_cliente", id);
-
+async function eliminarCliente(id_cliente, nombreCompleto) {
+    if (!confirm(`¿Estás seguro de dar de baja al cliente "${nombreCompleto}"?`)) return;
     try {
-        const res = await fetch("../api/baja_cliente.php", {
+        const res = await fetch("../api/clientes/baja.php", {
             method: "POST",
-            body: formData
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id_cliente })
         });
         const data = await res.json();
-
-        if (data.status === "success") {
-            alert(data.mensaje);
+        if (data.success) {
+            mostrarToast("Cliente dado de baja correctamente.", "exito");
             cargarClientes();
         } else {
-            alert("Error: " + data.mensaje);
+            mostrarToast(data.message || "No se pudo dar de baja.", "error");
         }
     } catch (err) {
-        console.error("Error:", err);
+        mostrarToast("Error de conexión.", "error");
     }
+}
+
+async function habilitarCliente(id_cliente, nombreCompleto) {
+    if (!confirm(`¿Querés volver a habilitar al cliente "${nombreCompleto}"?`)) return;
+    try {
+        const res = await fetch("../api/clientes/activar.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id_cliente })
+        });
+        const data = await res.json();
+        if (data.success) {
+            mostrarToast("Cliente habilitado correctamente.", "exito");
+            cargarClientes();
+        } else {
+            mostrarToast(data.message || "No se pudo habilitar el cliente.", "error");
+        }
+    } catch (err) {
+        mostrarToast("Error de conexión.", "error");
+    }
+}
+
+function mostrarToast(mensaje, tipo = "exito") {
+    const container = document.getElementById("toastContainer");
+    if (!container) return;
+    const toast = document.createElement("div");
+    toast.className = `toast-notificacion ${tipo}`;
+    toast.textContent = mensaje;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add("visible"), 10);
+    setTimeout(() => {
+        toast.classList.remove("visible");
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function escapeHtml(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return String(text || '').replace(/[&<>"']/g, m => map[m]);
 }
