@@ -14,6 +14,12 @@ $resClientes = $conn->query("SELECT id_cliente, apellido, nombre FROM clientes W
     <meta charset="UTF-8">
     <title>Gestión de Ventas - GalaxyTech</title>
     <link rel="stylesheet" href="../css/estilos.css">
+    <style>
+        table th:first-child,
+        #tabla-ventas-body td:first-child {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <div class="admin-container" style="max-width: 950px;">
@@ -22,15 +28,18 @@ $resClientes = $conn->query("SELECT id_cliente, apellido, nombre FROM clientes W
 
         <!-- Formulario -->
         <form id="form-venta">
-            <label>Cliente:</label>
-            <select id="id_cliente" name="id_cliente" required style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-                <option value="">Seleccione un cliente...</option>
-                <?php while($cli = $resClientes->fetch_assoc()): ?>
-                    <option value="<?php echo $cli['id_cliente']; ?>">
-                        <?php echo htmlspecialchars($cli['apellido'] . ", " . $cli['nombre']); ?>
-                    </option>
-                <?php endwhile; ?>
-            </select>
+            <label for="id_cliente">Cliente:</label>
+            <div style="display: flex; gap: 10px; margin-top: 5px; margin-bottom: 15px;">
+                <select id="id_cliente" name="id_cliente" required style="flex: 1; min-width: 0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                    <option value="">Seleccione un cliente...</option>
+                    <?php while($cli = $resClientes->fetch_assoc()): ?>
+                        <option value="<?php echo $cli['id_cliente']; ?>">
+                            <?php echo htmlspecialchars($cli['apellido'] . ", " . $cli['nombre']); ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
+                <a href="../clientes/indice.php" style="display: inline-flex; align-items: center; padding: 0 12px; border: 1px solid #ccc; border-radius: 4px; color: #444; text-decoration: none; white-space: nowrap;" aria-label="Seleccionar o crear un cliente">+ Cliente</a>
+            </div>
 
             <label>Monto Total ($):</label>
             <input type="number" step="0.01" id="total" name="total" placeholder="0.00" required>
@@ -44,7 +53,6 @@ $resClientes = $conn->query("SELECT id_cliente, apellido, nombre FROM clientes W
         <table>
             <thead>
                 <tr>
-                    <th>Nro. Venta</th>
                     <th>Cliente</th>
                     <th>Total</th>
                     <th>Fecha</th>
@@ -55,7 +63,6 @@ $resClientes = $conn->query("SELECT id_cliente, apellido, nombre FROM clientes W
             </tbody>
         </table>
     </div>
-
     <script src="../js/ventas.js"></script>
 </body>
 </html>

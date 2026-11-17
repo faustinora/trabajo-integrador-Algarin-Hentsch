@@ -17,6 +17,17 @@ if (!isset($_SESSION['usuario'])) {
         <a href="../principal.php" style="text-decoration: none; color: #666; font-size: 14px;">← Volver al Panel</a>
         <h1>Gestión de Productos / Artículos</h1>
 
+        <!-- Botón para agregar producto arriba -->
+        <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalProducto">
+            <i class="fas fa-plus"></i> Agregar Producto
+        </button>
+
+        <!-- Tabla de productos primero -->
+        <div class="card shadow-sm">
+            <div class="card-body" id="contenedor-tabla-productos">
+                <!-- Tabla cargada dinámicamente -->
+            </div>
+        </div>
         <form id="form-producto">
             <input type="hidden" id="id_producto" name="id_producto" value="">
             

@@ -17,6 +17,29 @@ if (!isset($_SESSION['usuario'])) {
         <a href="../principal.php" style="text-decoration: none; color: #666; font-size: 14px;">← Volver a Principal</a>
         <h1>Gestión de Clientes</h1>
 
+        <!-- Botón de alta disponible arriba del listado -->
+        <button type="button" class="btn btn-primary mb-3" id="btn-agregar-cliente">
+            <i class="fas fa-plus"></i> Agregar Cliente
+        </button>
+
+        <!-- Tabla colocada primero, debajo del botón -->
+        <h3>Listado de Clientes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-clientes-body">
+                <!-- Carga dinámicamente vía fetch -->
+            </tbody>
+        </table>
+
+        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+
         <form id="form-cliente">
             <input type="hidden" id="id_cliente" name="id_cliente" value="">
             
@@ -35,23 +58,6 @@ if (!isset($_SESSION['usuario'])) {
             <button type="submit" id="btn-guardar">Guardar</button>
             <button type="button" id="btn-limpiar" onclick="limpiarFormulario()">Limpiar</button>
         </form>
-
-        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
-
-        <h3>Listado de Clientes</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Cliente</th>
-                    <th>Teléfono</th>
-                    <th>Email</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="tabla-clientes-body">
-                <!-- Carga dinámicamente vía fetch -->
-            </tbody>
-        </table>
     </div>
 
     <script src="../js/clientes.js"></script>
