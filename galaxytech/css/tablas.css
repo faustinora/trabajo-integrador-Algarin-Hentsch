@@ -1,0 +1,35 @@
+/* ==========================================
+   4. TABLAS Y BOTONES DE ACCIÓN
+   ========================================== */
+.tabla-contenedor {
+    overflow-x: auto;
+}
+
+.col-acciones {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.btn-tabla-editar {
+    padding: 4px 10px;
+    font-size: 12px;
+    text-decoration: none;
+    margin-right: 5px;
+}
+
+.btn-tabla-eliminar {
+    background-color: #c0392b;
+    border-color: #c0392b;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    width: auto;
+    display: inline-block;
+    margin: 0;
+}
+
+.btn-tabla-eliminar:hover {
+    background-color: #a93226;
+}

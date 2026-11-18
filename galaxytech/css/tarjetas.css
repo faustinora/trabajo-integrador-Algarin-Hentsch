@@ -1,0 +1,21 @@
+.tarjeta-inventario {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.tarjeta-inventario small {
+    color: #64748b;
+    font-size: 0.94rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.tarjeta-inventario h3 {
+    margin-top: 0.4rem;
+    color: #2e7d32;
+    font-size: 1.6rem;
+}

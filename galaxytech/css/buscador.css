@@ -1,0 +1,21 @@
+.buscador-inline-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.buscador-inline-container input[type="text"] {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.buscador-inline-container button {
+    width: auto;
+    margin-bottom: 0;
+    background-color: #04464b;
+    border-color: #04464b;
+}
+
+.buscador-inline-container button:hover {
+    background-color: #065f65;
+}
