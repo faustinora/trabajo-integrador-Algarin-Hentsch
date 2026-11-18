@@ -1,45 +1,5 @@
 let listaProductosGlobal = [];
 
-
-// Al cargar la vista de nueva venta, detectamos si viene un servicio asociado
-document.addEventListener("DOMContentLoaded", async () => {
-    const formNuevaVenta = document.getElementById("formNuevaVenta");
-    if (formNuevaVenta) {
-        await cargarSelectClientes();
-        await cargarProductosGlobal();
-
-        // Leer parámetros URL si viene desde servicios
-        const params = new URLSearchParams(window.location.search);
-        const idServicioParam = params.get("id_servicio");
-        const idClienteParam = params.get("id_cliente");
-        const costoServicio = parseFloat(params.get("costo")) || 0;
-        const descEquipo = params.get("equipo") || "";
-
-        if (idClienteParam) {
-            const selectCliente = document.getElementById("selectCliente");
-            if (selectCliente) selectCliente.value = idClienteParam;
-        }
-
-        // Si quieres contemplar el costo de la mano de obra/servicio técnico como un ítem o referencia:
-        // O guardarlo directamente vinculado enviando id_servicio en el JSON de guardado:
-        formNuevaVenta.dataset.idServicio = idServicioParam || "";
-
-        agregarFilaCarrito(); 
-
-        const btnAddProducto = document.getElementById("btnAddProducto");
-        if (btnAddProducto) {
-            btnAddProducto.addEventListener("click", () => agregarFilaCarrito());
-        }
-
-        const btnNuevoCliente = document.getElementById("btnAbrirModalCliente");
-        if (btnNuevoCliente) {
-            // Ya manejado en tu listener actual del modal
-        }
-
-        formNuevaVenta.addEventListener("submit", guardarNuevaVenta);
-    }
-});
-
 /* ==========================================================================
    INICIALIZACIÓN VISTA ACTIVA
    ========================================================================== */
@@ -69,24 +29,114 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // 2. Lógica Registrar Nueva Venta
+    // 2. Lógica Registrar Nueva Venta / Cobro de Servicio
     const formNuevaVenta = document.getElementById("formNuevaVenta");
     if (formNuevaVenta) {
         await cargarSelectClientes();
         await cargarProductosGlobal();
-        agregarFilaCarrito(); // Inicia con una fila vacía por defecto
+
+        // Leer parámetros URL si viene desde servicios
+        const params = new URLSearchParams(window.location.search);
+        const idServicioParam = params.get("id_servicio");
+        const idClienteParam = params.get("id_cliente");
+        const costoServicio = parseFloat(params.get("costo")) || 0;
+        const descEquipo = params.get("equipo") || "Servicio Técnico";
+
+        if (idClienteParam) {
+            const selectCliente = document.getElementById("selectCliente");
+            if (selectCliente) selectCliente.value = idClienteParam;
+        }
+
+        formNuevaVenta.dataset.idServicio = idServicioParam || "";
+        formNuevaVenta.dataset.costoServicio = costoServicio;
+
+        // Si viene de un servicio, mostramos el panel informativo
+        if (idServicioParam) {
+            const infoServicio = document.getElementById("infoServicioCobro");
+            const txtDetalle = document.getElementById("txtDetalleEquipo");
+            const lblCosto = document.getElementById("lblCostoServicio");
+
+            if (infoServicio) infoServicio.style.display = "block";
+            if (txtDetalle) txtDetalle.textContent = `Equipo / Reparación: ${descEquipo}`;
+            if (lblCosto) lblCosto.textContent = `$${costoServicio.toFixed(2)}`;
+            
+            calcularTotalGeneral();
+        } else {
+            agregarFilaCarrito(); // Fila vacía inicial solo si es venta normal de productos
+        }
 
         const btnAddProducto = document.getElementById("btnAddProducto");
         if (btnAddProducto) {
-            btnAddProducto.addEventListener("click", () => agregarFilaCarrito());
-        }
-
-        const btnNuevoCliente = document.getElementById("btnNuevoClienteModal");
-        if (btnNuevoCliente) {
-            btnNuevoCliente.addEventListener("click", registrarClienteRapido);
+            btnAddProducto.addEventListener("click", () => {
+                agregarFilaCarrito();
+                calcularTotalGeneral();
+            });
         }
 
         formNuevaVenta.addEventListener("submit", guardarNuevaVenta);
+    }
+
+    // Lógica del modal de cliente rápido en nueva venta
+    const modalCliente = document.getElementById("modalNuevoCliente");
+    const btnAbrirModal = document.getElementById("btnAbrirModalCliente");
+    const btnCerrarModal = document.getElementById("btnCerrarModalCliente");
+    const formClienteModal = document.getElementById("formNuevoClienteModal");
+
+    if (btnAbrirModal && modalCliente) {
+        btnAbrirModal.addEventListener("click", () => {
+            modalCliente.style.display = "flex";
+        });
+    }
+
+    if (btnCerrarModal && modalCliente) {
+        btnCerrarModal.addEventListener("click", () => {
+            modalCliente.style.display = "none";
+            if (formClienteModal) formClienteModal.reset();
+        });
+    }
+
+    if (formClienteModal) {
+        formClienteModal.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const telefonoInput = document.getElementById("cli_telefono").value.trim();
+
+            if (!/^\d+$/.test(telefonoInput)) {
+                mostrarToast("El teléfono debe contener únicamente números.", "error");
+                return;
+            }
+
+            const datos = {
+                nombre: document.getElementById("cli_nombre").value.trim(),
+                apellido: document.getElementById("cli_apellido").value.trim(),
+                telefono: telefonoInput,
+                email: document.getElementById("cli_email").value.trim()
+            };
+
+            try {
+                const res = await fetch("../api/clientes/guardar.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(datos)
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    mostrarToast("Cliente registrado con éxito.", "exito");
+                    formClienteModal.reset();
+                    modalCliente.style.display = "none";
+                    await cargarSelectClientes();
+                    
+                    if (data.id_cliente) {
+                        const selectCliente = document.getElementById("selectCliente");
+                        if (selectCliente) selectCliente.value = data.id_cliente;
+                    }
+                } else {
+                    mostrarToast(data.message || "No se pudo registrar el cliente.", "error");
+                }
+            } catch (err) {
+                mostrarToast("Error de conexión al registrar cliente.", "error");
+            }
+        });
     }
 });
 
@@ -213,73 +263,6 @@ async function cargarSelectClientes() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-
-    const modalCliente = document.getElementById("modalNuevoCliente");
-    const btnAbrirModal = document.getElementById("btnAbrirModalCliente");
-    const btnCerrarModal = document.getElementById("btnCerrarModalCliente");
-    const formClienteModal = document.getElementById("formNuevoClienteModal");
-
-    if (btnAbrirModal && modalCliente) {
-        btnAbrirModal.addEventListener("click", () => {
-            modalCliente.style.display = "flex";
-        });
-    }
-
-    if (btnCerrarModal && modalCliente) {
-        btnCerrarModal.addEventListener("click", () => {
-            modalCliente.style.display = "none";
-            if (formClienteModal) formClienteModal.reset();
-        });
-    }
-
-    if (formClienteModal) {
-        formClienteModal.addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            const telefonoInput = document.getElementById("cli_telefono").value.trim();
-
-            if (!/^\d+$/.test(telefonoInput)) {
-                mostrarToast("El teléfono debe contener únicamente números.", "error");
-                return;
-            }
-
-            const datos = {
-                nombre: document.getElementById("cli_nombre").value.trim(),
-                apellido: document.getElementById("cli_apellido").value.trim(),
-                telefono: telefonoInput,
-                email: document.getElementById("cli_email").value.trim()
-            };
-
-            try {
-                const res = await fetch("../api/clientes/guardar.php", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(datos)
-                });
-                const data = await res.json();
-
-                if (res.ok && data.success) {
-                    mostrarToast("Cliente registrado con éxito.", "exito");
-                    formClienteModal.reset();
-                    modalCliente.style.display = "none"; // Cierra el modal al guardar
-                    
-                    await cargarSelectClientes();
-                    
-                    if (data.id_cliente) {
-                        const selectCliente = document.getElementById("selectCliente");
-                        if (selectCliente) selectCliente.value = data.id_cliente;
-                    }
-                } else {
-                    mostrarToast(data.message || "No se pudo registrar el cliente.", "error");
-                }
-            } catch (err) {
-                mostrarToast("Error de conexión al registrar cliente.", "error");
-            }
-        });
-    }
-});
-
 async function cargarProductosGlobal() {
     try {
         const res = await fetch("../api/productos/listar.php");
@@ -357,15 +340,22 @@ function actualizarFilaSubtotal(tr) {
 }
 
 function calcularTotalGeneral() {
-    let totalGeneral = 0;
+    const form = document.getElementById("formNuevaVenta");
+    const costoServicio = form && form.dataset.costoServicio ? parseFloat(form.dataset.costoServicio) || 0 : 0;
+
+    let totalProductos = 0;
     document.querySelectorAll(".fila-carrito").forEach(tr => {
         const select = tr.querySelector(".prod-select");
         const cantInput = tr.querySelector(".prod-cant");
-        const opt = select.options[select.selectedIndex];
-        if (opt && opt.dataset.precio) {
-            totalGeneral += (parseFloat(opt.dataset.precio) || 0) * (parseInt(cantInput.value) || 0);
+        if (select && select.selectedIndex > 0) {
+            const opt = select.options[select.selectedIndex];
+            if (opt && opt.dataset.precio) {
+                totalProductos += (parseFloat(opt.dataset.precio) || 0) * (parseInt(cantInput.value) || 0);
+            }
         }
     });
+
+    const totalGeneral = costoServicio + totalProductos;
     const lblTotal = document.getElementById("lblTotalVenta");
     if (lblTotal) lblTotal.textContent = `$${totalGeneral.toFixed(2)}`;
 }
@@ -391,10 +381,13 @@ async function guardarNuevaVenta(e) {
         }
     });
 
-    // Nota: Si el servicio se cobra solo por su costo y no lleva productos físicos, 
-    // puedes permitir productos vacíos o asegurarte de enviar un ítem de servicio si tu lógica lo requiere.
-    if (productos.length === 0 && !id_servicio) {
-        mostrarToast("Debe agregar al menos un producto o cobrar el servicio técnico.", "error");
+    if (id_cliente <= 0) {
+        mostrarToast("Debe seleccionar un cliente.", "error");
+        return;
+    }
+
+    if (!id_servicio && productos.length === 0) {
+        mostrarToast("Debe agregar al menos un producto a la venta.", "error");
         return;
     }
 
@@ -418,7 +411,7 @@ async function guardarNuevaVenta(e) {
 }
 
 /* ==========================================================================
-   UTILIDADES COMPARTIDAS (NOTIFICACIONES Y SEGURIDAD)
+   UTILIDADES COMPARTIDAS
    ========================================================================== */
 function mostrarToast(mensaje, tipo = "exito") {
     const container = document.getElementById("toastContainer");

@@ -25,7 +25,7 @@ if ($id_servicio <= 0 || empty($equipo_descripcion)) {
     exit();
 }
 
-$stmt = $conn->prepare("UPDATE servicios SET equipo_descripcion = ?, diagnostico = ?, costo = ?, estado = ? WHERE id = ?");
+$stmt = $conn->prepare("UPDATE servicios SET equipo_descripcion = ?, diagnostico = ?, costo = ?, estado = ? WHERE id_servicio = ?");
 $stmt->bind_param("ssdsi", $equipo_descripcion, $diagnostico, $costo, $estado, $id_servicio);
 
 if ($stmt->execute()) {

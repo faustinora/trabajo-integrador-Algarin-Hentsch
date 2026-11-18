@@ -17,7 +17,7 @@ if (!isset($_SESSION['usuario'])) {
     
     <main class="container contenedor-principal" id="mainNuevaVenta">
         <a href="indice.php" class="link-volver">← Volver al Historial de Ventas</a>
-        <h1>Registrar Nueva Venta</h1>
+        <h1>Registrar Nueva Venta / Cobro</h1>
 
         <form id="formNuevaVenta">
             <label for="selectCliente">Cliente</label>
@@ -30,7 +30,14 @@ if (!isset($_SESSION['usuario'])) {
 
             <hr class="separador-form">
 
-            <h3>Productos en la Venta</h3>
+            <!-- Panel informativo si viene de un Servicio Técnico -->
+            <div id="infoServicioCobro" style="display: none; background: #f8fafc; border: 1px solid #cbd5e1; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <h3 style="margin-top: 0; color: #1e293b;">Concepto: Servicio Técnico</h3>
+                <p id="txtDetalleEquipo" style="color: #64748b; margin-bottom: 0.5rem;"></p>
+                <p style="font-size: 1.2rem; font-weight: bold; color: #16a34a; margin: 0;">Monto de la Reparación: <span id="lblCostoServicio">$0.00</span></p>
+            </div>
+
+            <h3>Productos o Repuestos Opcionales</h3>
             
             <div class="tabla-contenedor">
                 <table>
@@ -48,7 +55,7 @@ if (!isset($_SESSION['usuario'])) {
             </div>
 
             <div class="contenedor-agregar-producto">
-                <button type="button" id="btnAddProducto" class="btn-secundario">+ Agregar Producto</button>
+                <button type="button" id="btnAddProducto" class="btn-secundario">+ Agregar Repuesto / Producto</button>
             </div>
 
             <div class="tarjeta-inventario">
@@ -56,11 +63,11 @@ if (!isset($_SESSION['usuario'])) {
                 <h3 id="lblTotalVenta">$0.00</h3>
             </div>
 
-            <button type="submit" class="btn-principal">Registrar Venta</button>
+            <button type="submit" class="btn-principal">Registrar Venta / Cobro</button>
         </form>
     </main>
 
-    <!-- MODAL NUEVO CLIENTE (Oculto por defecto) -->
+    <!-- MODAL NUEVO CLIENTE -->
     <div id="modalNuevoCliente" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center;">
         <div style="background: #ffffff; padding: 2rem; border-radius: 8px; width: 100%; max-width: 450px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
             <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #1e293b;">Registrar Nuevo Cliente</h3>
