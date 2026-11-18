@@ -1,33 +1,108 @@
 document.addEventListener("DOMContentLoaded", () => {
-    cargarClientes(false);
 
-    const inputBuscador = document.getElementById("inputBuscador");
-    const selectEstado = document.getElementById("selectFiltroEstado");
-    const btnBuscar = document.getElementById("btnBuscar");
+    // Lógica para indice
+    const tablaClientesBody = document.getElementById("tabla-clientes-body");
+    if (tablaClientesBody) {
+        cargarClientes(false);
 
-    if (inputBuscador) {
-        inputBuscador.addEventListener("keydown", (e) => {
-            if(e.key === "Enter"){
+        const inputBuscador = document.getElementById("inputBuscador");
+        const selectEstado = document.getElementById("selectFiltroEstado");
+        const btnBuscar = document.getElementById("btnBuscar");
+
+        if (inputBuscador) {
+            inputBuscador.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    cargarClientes(true);
+                }
+            });
+        }
+
+        if (btnBuscar) {
+            btnBuscar.addEventListener("click", (e) => {
                 e.preventDefault();
                 cargarClientes(true);
+            });
+        }
+
+        if (selectEstado) {
+            selectEstado.addEventListener("change", () => {
+                cargarClientes(false);
+            });
+        }
+    }
+
+    //Lógica para form registro
+    const formNuevoCliente = document.getElementById("formNuevoCliente");
+    if (formNuevoCliente) {
+        formNuevoCliente.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const datos = {
+                nombre: document.getElementById("nombre").value.trim(),
+                apellido: document.getElementById("apellido").value.trim(),
+                telefono: document.getElementById("telefono").value.trim(),
+                email: document.getElementById("email").value.trim()
+            };
+
+            try {
+                const res = await fetch("../api/clientes/guardar.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(datos)
+                });
+                const resultado = await res.json();
+
+                if (res.ok && resultado.success) {
+                    mostrarToast(resultado.message, "exito");
+                    setTimeout(() => window.location.href = "indice.php", 1500);
+                } else {
+                    mostrarToast(resultado.message || "Error al registrar cliente.", "error");
+                }
+            } catch (err) {
+                mostrarToast("Error de conexión con el servidor.", "error");
             }
         });
     }
 
-    if (btnBuscar) {
-        btnBuscar.addEventListener("click", (e) => {
+    // Lógica para form editar
+    const formEditarCliente = document.getElementById("formEditarCliente");
+    if (formEditarCliente) {
+        inicializarEdicion();
+
+        formEditarCliente.addEventListener("submit", async (e) => {
             e.preventDefault();
-            cargarClientes(true);
+
+            const datos = {
+                id_cliente: document.getElementById("id_cliente").value,
+                nombre: document.getElementById("nombre").value.trim(),
+                apellido: document.getElementById("apellido").value.trim(),
+                telefono: document.getElementById("telefono").value.trim(),
+                email: document.getElementById("email").value.trim()
+            };
+
+            try {
+                const res = await fetch("../api/clientes/actualizar.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(datos)
+                });
+                const resultado = await res.json();
+
+                if (res.ok && resultado.success) {
+                    mostrarToast(resultado.message, "exito");
+                    setTimeout(() => window.location.href = "indice.php", 1500);
+                } else {
+                    mostrarToast(resultado.message || "Error al actualizar.", "error");
+                }
+            } catch (err) {
+                mostrarToast("Error de conexión con el servidor.", "error");
+            }
         });
     }
-
-    if (selectEstado) {
-        selectEstado.addEventListener("change", () => {
-            cargarClientes(false);
-        });
-    }
-
 });
+
+// FUNCIONES LISTADO Y ACCIONES
 
 async function cargarClientes(avisar = false) {
     try {
@@ -62,7 +137,13 @@ async function cargarClientes(avisar = false) {
         tbody.innerHTML = "";
 
         if (clientes.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='5' style='text-align: center;'>No se encontraron clientes.</td></tr>";
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan='5' style='text-align: center; padding: 2rem;'>
+                        <p style="margin-bottom: 1rem; color: #94a3b8;">No se encontraron clientes.</p>
+                        <button type="button" class="secondary" onclick="limpiarYRecargar()" style="display: inline-block; width: auto; padding: 0.5rem 1.2rem;">Actualizar</button>
+                    </td>
+                </tr>`;
             if (totalElem) totalElem.innerHTML = "<strong>Total:</strong> 0 clientes";
             return;
         }
@@ -141,6 +222,33 @@ async function habilitarCliente(id_cliente, nombreCompleto) {
     }
 }
 
+// FUNCIONES EDICIÓN
+
+async function inicializarEdicion() {
+    const idElem = document.getElementById("id_cliente");
+    if (!idElem) return;
+    const id = idElem.value;
+    try {
+        const res = await fetch(`../api/clientes/listar.php?status=todos`);
+        const clientes = await res.json();
+        const cliente = clientes.find(c => c.id_cliente == id);
+
+        if (cliente) {
+            document.getElementById("nombre").value = cliente.nombre;
+            document.getElementById("apellido").value = cliente.apellido;
+            document.getElementById("telefono").value = cliente.telefono;
+            document.getElementById("email").value = cliente.email || '';
+        } else {
+            mostrarToast("No se encontró el cliente.", "error");
+            setTimeout(() => window.location.href = "indice.php", 1500);
+        }
+    } catch (err) {
+        mostrarToast("Error al cargar los datos del cliente.", "error");
+    }
+}
+
+// auxiliares
+
 function mostrarToast(mensaje, tipo = "exito") {
     const container = document.getElementById("toastContainer");
     if (!container) return;
@@ -153,6 +261,14 @@ function mostrarToast(mensaje, tipo = "exito") {
         toast.classList.remove("visible");
         setTimeout(() => toast.remove(), 300);
     }, 3000);
+}
+
+function limpiarYRecargar() {
+    const inputBuscador = document.getElementById("inputBuscador");
+    if (inputBuscador) {
+        inputBuscador.value = "";
+    }
+    cargarClientes(false);
 }
 
 function escapeHtml(text) {

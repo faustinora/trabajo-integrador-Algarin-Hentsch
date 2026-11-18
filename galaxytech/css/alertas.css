@@ -1,0 +1,53 @@
+#toastContainer {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.toast-notificacion {
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    min-width: 250px;
+}
+
+.toast-notificacion.exito { background-color: #15803d; }
+.toast-notificacion.error { background-color: #b91c1c; }
+
+.toast-notificacion.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+tr.stock-bajo {
+    background-color: rgba(239, 68, 68, 0.12);
+}
+
+.alerta-texto-bajo {
+    color: #ef4444;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+/* Badges de estado */
+.badge-estado {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.badge-pendiente  { background-color: #fef08a; color: #854d0e; }
+.badge-proceso    { background-color: #bae6fd; color: #075985; }
+.badge-finalizado { background-color: #bbf7d0; color: #166534; }

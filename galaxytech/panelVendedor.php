@@ -1,78 +1,41 @@
 <?php
 session_start();
 
-// Si no hay sesión o no es vendedor (ni admin), lo sacamos
 if (!isset($_SESSION['usuario']) || ($_SESSION['rol'] !== 'vendedor' && $_SESSION['rol'] !== 'admin')) {
     header("Location: login.php?error=acceso_no_autorizado");
     exit();
 }
 ?>
+
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Vendedor - GalaxyTech</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link rel="stylesheet" href="css/estilos.css">
-    <style>
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .badge-rol-vendedor {
-            background-color: #bbf7d0;
-            color: #166534;
-            padding: 3px 10px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            vertical-align: middle;
-        }
-        .menu-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-        .menu-grid a[role="button"] {
-            padding: 1.25rem 1rem;
-            font-weight: 600;
-            text-align: center;
-            margin: 0;
-        }
-        .btn-salir-panel {
-            background-color: #c0392b !important;
-            border-color: #c0392b !important;
-            color: #ffffff !important;
-        }
-    </style>
 </head>
 <body>
-    <main class="container contenedor-principal" style="max-width: 800px; margin-top: 2rem;">
+    <main class="container contenedor-principal contenedor-panel">
         <article>
             <div class="panel-header">
                 <div>
-                    <h2 style="margin-bottom: 0.25rem;">Panel de Ventas</h2>
-                    <p style="margin: 0; color: #94a3b8;">
+                    <h2>Panel de Ventas</h2>
+                    <p class="panel-subtitulo">
                         Bienvenido, <strong><?php echo htmlspecialchars($_SESSION['usuario']); ?></strong> 
                         <span class="badge-rol-vendedor">Vendedor</span>
                     </p>
                 </div>
-                <a href="cierresesion.php" role="button" class="btn-salir-panel">Cerrar Sesión</a>
+                <a href="cierresesion.php" class="btn-salir-panel">Cerrar Sesión</a>
             </div>
 
-            <hr>
+            <hr class="separador-seccion">
 
-            <h3 style="font-size: 1.15rem; color: #cbd5e1;">Operaciones Habilitadas</h3>
+            <h3 class="panel-subtitulo-modulos">Operaciones Habilitadas</h3>
             <div class="menu-grid">
-                <a href="clientes/indice.php" role="button" class="secondary">Clientes (Consultar / Alta)</a>
-                <a href="servicios/indice.php" role="button" class="secondary">Registrar / Consultar Servicios</a>
-                <a href="ventas/indice.php" role="button">Registrar Nueva Venta</a>
+                <a href="clientes/indice.php" class="btn-menu-secundario">Clientes (Consultar / Alta)</a>
+                <a href="servicios/indice.php" class="btn-menu-secundario">Registrar / Consultar Servicios</a>
+                <a href="ventas/indice.php" class="btn-menu-principal">Registrar Nueva Venta</a>
             </div>
         </article>
     </main>

@@ -12,7 +12,7 @@ $conn = getConnection();
 
 $busqueda = trim($_GET['q'] ?? '');
 
-$sqlBase = "SELECT v.id_venta, DATE_FORMAT(v.fecha_venta, '%d/%m/%Y %H:%i') AS fecha_venta, 
+$sqlBase = "SELECT v.id_venta, v.id_servicio, DATE_FORMAT(v.fecha_venta, '%d/%m/%Y %H:%i') AS fecha_venta, 
                    c.apellido, c.nombre, u.usuario AS vendedor, v.total
             FROM ventas v
             LEFT JOIN clientes c ON v.id_cliente = c.id_cliente

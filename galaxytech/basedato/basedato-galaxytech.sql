@@ -9,10 +9,7 @@ CREATE TABLE clientes (
     telefono VARCHAR(30) NOT NULL,
     email VARCHAR(100) NOT NULL,
     activo TINYINT(1) DEFAULT 1
-) ENGINE=InnoDB;
-
--- Recordá insertar primero al Consumidor Final para garantizar id_cliente = 1:
--- INSERT INTO clientes (id_cliente, nombre, apellido, telefono, email, activo) VALUES (1, 'Consumidor', 'Final', '-', '-', 1);
+);
 
 CREATE TABLE usuarios (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,

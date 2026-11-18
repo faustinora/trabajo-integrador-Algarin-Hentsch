@@ -8,7 +8,7 @@ if (!isset($_SESSION['usuario'])) {
     exit();
 }
 
-require_once '../../config/basedato.php';
+require_once '../../config/conexion.php';
 $conn = getConnection();
 
 $datos = json_decode(file_get_contents('php://input'), true);
@@ -23,8 +23,8 @@ if ($id_venta <= 0) {
 $conn->begin_transaction();
 
 try {
-    // Verificar si la venta existe y está activa
-    $stmtCheck = $conn->prepare("SELECT activo FROM ventas WHERE id_venta = ? FOR UPDATE");
+    // Verificar si la venta existe y su estado actual
+    $stmtCheck = $conn->prepare("SELECT estado FROM ventas WHERE id_venta = ? FOR UPDATE");
     $stmtCheck->bind_param("i", $id_venta);
     $stmtCheck->execute();
     $ventaData = $stmtCheck->get_result()->fetch_assoc();
@@ -33,7 +33,7 @@ try {
     if (!$ventaData) {
         throw new Exception("La venta no existe.");
     }
-    if ((int)$ventaData['activo'] === 0) {
+    if ((int)$ventaData['estado'] === 0) {
         throw new Exception("La venta ya se encuentra anulada.");
     }
 
@@ -52,12 +52,8 @@ try {
     $stmtDetalles->close();
     $stmtStockRest->close();
 
-    // Marcar la venta como inactiva (baja lógica)
-     शैmtBaja = $conn->prepare("UPDATE ventas SET activo = 0 WHERE id_venta = ?");
-    // Nota: Corrigiendo variable abajo:
-    $stmtBaja->close();
-
-    $stmtBaja = $conn->prepare("UPDATE ventas SET activo = 0 WHERE id_venta = ?");
+    // Marcar la venta como anulada (estado = 0)
+    $stmtBaja = $conn->prepare("UPDATE ventas SET estado = 0 WHERE id_venta = ?");
     $stmtBaja->bind_param("i", $id_venta);
     $stmtBaja->execute();
     $stmtBaja->close();

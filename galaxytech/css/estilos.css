@@ -1,171 +1,164 @@
+@import url('principales.css');
+@import url('tarjetas.css');
+@import url('buscador.css');
+@import url('tablas.css');
+@import url('alertas.css');
+
 /* ==========================================
-   1. LAYOUT GENERAL Y CABECERAS
+   LOGIN Y PANELES DE INICIO
    ========================================== */
-.contenedor-principal {
-    max-width: 950px;
-    padding-top: 2rem;
-    margin: 0 auto;
-}
-
-.link-volver {
-    text-decoration: none;
-    color: #94a3b8;
-    font-size: 14px;
-    display: inline-block;
-    margin-bottom: 15px;
-}
-
-.header-gestion {
+.body-login {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: var(--bg-main);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 2.2rem;
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+}
+
+.login-header {
+    text-align: center;
     margin-bottom: 1.5rem;
 }
 
-.header-gestion h1, .header-gestion a {
-    margin: 0;
+.login-header h2 {
+    margin-bottom: 0.25rem;
 }
 
-/* ==========================================
-   2. TARJETAS DE INDICADORES / RESUMEN
-   ========================================== */
-.tarjeta-inventario {
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
-    padding: 1.5rem;
-    border-radius: 8px;
-    text-align: center;
-    margin: 20px 0;
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
-.tarjeta-inventario small {
-    color: #64748b;
-    font-size: 0.94rem;
+.panel-header h2 { margin-bottom: 0.25rem; }
+.panel-subtitulo { margin: 0; color: var(--text-muted); }
+.panel-subtitulo-modulos { font-size: 1.1rem; color: var(--text-label); }
+
+.badge-rol, .badge-rol-vendedor {
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
     font-weight: bold;
-    text-transform: uppercase;
+    vertical-align: middle;
 }
 
-.tarjeta-inventario h3 {
-    margin-top: 0.4rem;
-    color: #2e7d32;
-    font-size: 1.6rem;
+.badge-rol { background-color: #bfdbfe; color: #1e40af; }
+.badge-rol-vendedor { background-color: #bbf7d0; color: #166534; }
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-menu-principal, .btn-menu-secundario {
+    padding: 1.25rem 1rem;
+    font-weight: 600;
+    text-align: center;
+    border-radius: 8px;
+    text-decoration: none;
+    display: block;
+    transition: transform 0.15s ease, background-color 0.2s ease;
+}
+
+.btn-menu-principal {
+    background-color: var(--primary);
+    border: 1px solid var(--primary);
+    color: #ffffff;
+}
+.btn-menu-principal:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+}
+
+.btn-menu-secundario {
+    background-color: var(--secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+}
+.btn-menu-secundario:hover {
+    background-color: var(--secondary-hover);
+    transform: translateY(-2px);
 }
 
 /* ==========================================
-   3. BUSCADOR EN LÍNEA CON BOTÓN
+   INFORMES, MODALES Y CARRITO
    ========================================== */
-.buscador-inline-container {
+.informes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 24px;
+    margin-top: 16px;
+}
+
+.informe-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
+}
+
+.informe-box h4 {
+    font-size: 1.05rem;
+    color: var(--text-main);
+    margin: 0 0 14px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.select-cliente-wrapper {
     display: flex;
     gap: 10px;
-    margin-bottom: 25px;
+    align-items: flex-end;
 }
 
-.buscador-inline-container input[type="text"] {
+.select-cliente-wrapper select {
     flex: 1;
     margin-bottom: 0;
 }
 
-.buscador-inline-container button {
-    width: auto;
-    margin-bottom: 0;
-    background-color: #04464b;
-    border-color: #04464b;
-}
-
-.buscador-inline-container button:hover {
-    background-color: #065f65;
-}
-
-/* ==========================================
-   4. TABLAS Y BOTONES DE ACCIÓN
-   ========================================== */
-.tabla-contenedor {
-    overflow-x: auto;
-}
-
-.col-acciones {
-    text-align: center;
-    white-space: nowrap;
-}
-
-.btn-tabla-editar {
-    padding: 4px 10px;
-    font-size: 12px;
-    text-decoration: none;
-    margin-right: 5px;
-}
-
-.btn-tabla-eliminar {
-    background-color: #c0392b;
-    border-color: #c0392b;
-    padding: 4px 10px;
-    font-size: 12px;
-    color: white;
-    border-radius: 4px;
-    cursor: pointer;
-    width: auto;
-    display: inline-block;
-    margin: 0;
-}
-
-.btn-tabla-eliminar:hover {
-    background-color: #a93226;
-}
-
-/* ==========================================
-   5. ALERTAS Y TOASTS FLOTANTES
-   ========================================== */
-#toastContainer {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.toast-notificacion {
-    padding: 12px 20px;
+.modal-articulo {
+    max-width: 520px;
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    color: #ffffff;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-card);
+    padding: 16px;
+}
+
+/* Utilidades */
+.alerta-error {
+    background-color: #fecaca;
+    color: #991b1b;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
     font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    opacity: 0;
-    transform: translateY(20px);
-    min-width: 250px;
+    margin-bottom: 1.2rem;
+    text-align: center;
 }
 
-.toast-notificacion.exito {
-    background-color: #2e7d32;
-}
-
-.toast-notificacion.error {
-    background-color: #c62828;
-}
-
-.toast-notificacion.visible {
-    opacity: 1;
-    transform: translateY(0) scale (1);
-}
-
-tr.stock-bajo {
-    background-color: rgba(198, 40, 40, 0.12) !important;
-}
-
-.alerta-texto-bajo {
-    color: #ef4444;
-    font-weight: bold;
-    font-size: 0.85rem;
-}
-
-.badge-estado {
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: bold;
-}
-.badge-pendiente { background-color: #fef08a; color: #854d0e; }
-.badge-proceso { background-color: #bae6fd; color: #075985; }
-.badge-finalizado { background-color: #bbf7d0; color: #166534; }
+.texto-secundario { color: var(--text-muted); font-size: 0.85rem; }
+.texto-ver-detalle { font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px; }
+.btn-espaciado { margin-top: 1.5rem; }
+.label-espaciado { margin-top: 15px; }

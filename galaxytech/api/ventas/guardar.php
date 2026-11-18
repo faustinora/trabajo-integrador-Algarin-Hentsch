@@ -21,6 +21,8 @@ if ($id_usuario <= 0) {
 
 $datos = json_decode(file_get_contents('php://input'), true);
 $id_cliente = (int)($datos['id_cliente'] ?? 0);
+// Recoger id_servicio si viene especificado, de lo contrario se guarda como NULL
+$id_servicio = !empty($datos['id_servicio']) ? (int)$datos['id_servicio'] : null; 
 $productos = $datos['productos'] ?? []; // Array de ítems: [{id_producto, cantidad}, ...]
 
 if ($id_cliente <= 0 || empty($productos) || !is_array($productos)) {
@@ -71,9 +73,15 @@ try {
         ];
     }
 
-    // 2. Insertar cabecera en la tabla 'ventas'
-    $stmtVenta = $conn->prepare("INSERT INTO ventas (id_cliente, id_usuario, total, fecha_venta, activo) VALUES (?, ?, ?, NOW(), 1)");
-    $stmtVenta->bind_param("iid", $id_cliente, $id_usuario, $totalVenta);
+    // 2. Insertar cabecera en la tabla 'ventas' (Incluyendo id_servicio y estado = 1)
+    if ($id_servicio !== null) {
+        $stmtVenta = $conn->prepare("INSERT INTO ventas (id_cliente, id_usuario, id_servicio, total, fecha_venta, estado) VALUES (?, ?, ?, ?, NOW(), 1)");
+        $stmtVenta->bind_param("iiid", $id_cliente, $id_usuario, $id_servicio, $totalVenta);
+    } else {
+        $stmtVenta = $conn->prepare("INSERT INTO ventas (id_cliente, id_usuario, id_servicio, total, fecha_venta, estado) VALUES (?, ?, NULL, ?, NOW(), 1)");
+        $stmtVenta->bind_param("iid", $id_cliente, $id_usuario, $totalVenta);
+    }
+    
     $stmtVenta->execute();
     $id_venta = $conn->insert_id;
     $stmtVenta->close();

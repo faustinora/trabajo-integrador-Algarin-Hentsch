@@ -1,0 +1,46 @@
+.buscador-inline-container {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+    margin-bottom: 1.5rem;
+}
+
+/* Misma especificidad que principales.css para pisar el margin-bottom sin usar !important */
+.buscador-inline-container input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
+.buscador-inline-container select {
+    height: 42px;
+    padding: 0 14px;
+    margin-top: 0;
+    margin-bottom: 0;
+    line-height: normal;
+    box-sizing: border-box;
+}
+
+.buscador-inline-container input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]) {
+    flex: 2;
+}
+
+.buscador-inline-container select {
+    flex: 1;
+    max-width: 220px;
+}
+
+.buscador-inline-container button {
+    height: 42px;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0 22px;
+    background-color: var(--primary);
+    border: 1px solid var(--primary);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease;
+}
+
+.buscador-inline-container button:hover {
+    background-color: var(--primary-hover);
+}

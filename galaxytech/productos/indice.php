@@ -6,19 +6,13 @@ if (!isset($_SESSION['usuario'])) {
 }
 $panelVolver = ($_SESSION['rol'] === 'admin') ? '../panelAdmin.php' : '../panelVendedor.php';
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Productos - GalaxyTech</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
-    <style>
-        .filtro-estado-wrapper {
-            max-width: 200px;
-            margin-bottom: 0;
-        }
-    </style>
 </head>
 <body>
     <main class="container contenedor-principal">
@@ -26,7 +20,7 @@ $panelVolver = ($_SESSION['rol'] === 'admin') ? '../panelAdmin.php' : '../panelV
 
         <div class="header-gestion">
             <h1>Gestión de Productos</h1>
-            <a href="nuevo.php" role="button">+ Nuevo Producto</a>
+            <a href="nuevo.php" class="btn-nuevo">+ Nuevo Producto</a>
         </div>
 
         <div class="tarjeta-inventario">

@@ -11,14 +11,7 @@ $panelVolver = ($_SESSION['rol'] === 'admin') ? '../panelAdmin.php' : '../panelV
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Clientes - GalaxyTech</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
-    <style>
-        .filtro-estado-wrapper {
-            max-width: 200px;
-            margin-bottom: 0;
-        }
-    </style>
 </head>
 <body>
     <main class="container contenedor-principal">
@@ -26,10 +19,9 @@ $panelVolver = ($_SESSION['rol'] === 'admin') ? '../panelAdmin.php' : '../panelV
 
         <div class="header-gestion">
             <h1>Gestión de Clientes</h1>
-            <a href="nuevo.php" role="button">+ Nuevo Cliente</a>
+            <a href="nuevo.php" class="btn-nuevo">+ Nuevo Cliente</a>
         </div>
 
-        <!-- Buscador y Filtro de Estado en la misma línea -->
         <div class="buscador-inline-container">
             <input type="text" id="inputBuscador" placeholder="Buscar por apellido, nombre, teléfono o email...">
             

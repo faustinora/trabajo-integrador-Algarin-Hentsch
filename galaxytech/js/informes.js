@@ -42,7 +42,7 @@ async function cargarDashboard() {
         const data = await res.json();
 
         if (data.status === "success") {
-            // 1. Cargar Indicadores (KPIs)
+
             document.getElementById("kpi-ventas").textContent = formatoMoneda.format(data.kpis.monto_ventas || 0);
             document.getElementById("kpi-pendientes").textContent = data.kpis.servicios_pendientes ?? 0;
             document.getElementById("kpi-stock-bajo").textContent = data.kpis.stock_bajo ?? 0;
@@ -69,7 +69,7 @@ function renderizarModalStock() {
     tbody.innerHTML = "";
 
     if (productosStockBajo.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">No hay productos con stock bajo.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">No hay productos.</td></tr>`;
         return;
     }
 

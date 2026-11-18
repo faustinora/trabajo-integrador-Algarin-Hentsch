@@ -1,31 +1,111 @@
 document.addEventListener("DOMContentLoaded", () => {
-    cargarProductos(false);
 
+    // 1. Lógica para listar (indice)
     const inputBuscador = document.getElementById("inputBuscador");
     const selectEstado = document.getElementById("selectFiltroEstado");
     const btnBuscar = document.getElementById("btnBuscar");
 
-    if (inputBuscador) {
-        inputBuscador.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
+    if (document.getElementById("tabla-productos-body")) {
+        cargarProductos(false);
+
+        if (inputBuscador) {
+            inputBuscador.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    cargarProductos(true);
+                }
+            });
+        }
+
+        if (btnBuscar) {
+            btnBuscar.addEventListener("click", (e) => {
                 e.preventDefault();
                 cargarProductos(true);
+            });
+        }
+
+        if (selectEstado) {
+            selectEstado.addEventListener("change", () => cargarProductos(false));
+        }
+    }
+
+    // 2. Lógica para form NUEVO
+    const formNuevoProducto = document.getElementById("formNuevoProducto");
+    if (formNuevoProducto) {
+        formNuevoProducto.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const datos = {
+                codigo: document.getElementById("codigo").value.trim(),
+                nombre: document.getElementById("nombre").value.trim(),
+                descripcion: document.getElementById("descripcion").value.trim(),
+                precio: parseFloat(document.getElementById("precio").value),
+                stock: parseInt(document.getElementById("stock").value)
+            };
+
+            try {
+                const res = await fetch("../api/productos/guardar.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(datos)
+                });
+                const resultado = await res.json();
+
+                if (res.ok && resultado.success) {
+                    mostrarToast(resultado.message, "exito");
+                    setTimeout(() => window.location.href = "indice.php", 1500);
+                } else {
+                    mostrarToast(resultado.message || "Error al registrar.", "error");
+                }
+            } catch (err) {
+                mostrarToast("Error de conexión con el servidor.", "error");
             }
         });
     }
 
-    if (btnBuscar) {
-        btnBuscar.addEventListener("click", (e) => {
-            e.preventDefault();
-            cargarProductos(true);
-        });
-    }
+    // 3. Lógica para form EDITAR
+    const formEditarProducto = document.getElementById("formEditarProducto");
+    if (formEditarProducto) {
+        const idInput = document.getElementById("id_producto");
+        if (idInput) {
+            cargarDatosProductoEditar(idInput.value);
+        }
 
-    if (selectEstado) {
-        selectEstado.addEventListener("change", () => cargarProductos(false));
+        formEditarProducto.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const datos = {
+                id_producto: document.getElementById("id_producto").value,
+                codigo: document.getElementById("codigo").value.trim(),
+                nombre: document.getElementById("nombre").value.trim(),
+                descripcion: document.getElementById("descripcion").value.trim(),
+                precio: parseFloat(document.getElementById("precio").value),
+                stock: parseInt(document.getElementById("stock").value)
+            };
+
+            try {
+                const res = await fetch("../api/productos/actualizar.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(datos)
+                });
+                const resultado = await res.json();
+
+                if (res.ok && resultado.success) {
+                    mostrarToast(resultado.message, "exito");
+                    setTimeout(() => window.location.href = "indice.php", 1500);
+                } else {
+                    mostrarToast(resultado.message || "Error al actualizar.", "error");
+                }
+            } catch (err) {
+                mostrarToast("Error de conexión con el servidor.", "error");
+            }
+        });
     }
 });
 
+
+// --- FUNCIONES AUXILIARES ---
 
 async function cargarProductos(avisar = false) {
     try {
@@ -43,7 +123,7 @@ async function cargarProductos(avisar = false) {
         const totalElem = document.getElementById("totalRegistros");
         const spanValorInv = document.getElementById("spanValorInventario");
 
-                if (avisar) {
+        if (avisar) {
             if (productos.length > 0) {
                 mostrarToast(`Se encontraron ${productos.length} resultado(s).`, "exito");
             } else {
@@ -54,7 +134,16 @@ async function cargarProductos(avisar = false) {
         tbody.innerHTML = "";
 
         if (productos.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='6' style='text-align: center;'>No se encontraron productos.</td></tr>";
+            if (avisar) {
+                mostrarToast("No se encontraron coincidencias.", "error");
+            }
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan='6' style='text-align: center; padding: 2rem;'>
+                        <p style="margin-bottom: 1rem; color: #94a3b8;">No se encontraron productos.</p>
+                        <button type="button" class="secondary" onclick="limpiarYRecargar()" style="display: inline-block; width: auto; padding: 0.5rem 1.2rem;">Actualizar</button>
+                    </td>
+                </tr>`;
             if (totalElem) totalElem.innerHTML = "<strong>Total:</strong> 0 productos";
             if (spanValorInv) spanValorInv.textContent = "$0.00";
             return;
@@ -81,7 +170,7 @@ async function cargarProductos(avisar = false) {
                 : stock;
 
             const botonAccion = esActivo
-                ? `<button onclick="eliminarProducto(${idProd}, '${escapeHtml(p.nombre)}')" class="btn-tabla-eliminar">Dar de baja</button>`
+                ? `<button onclick="eliminarProducto(${idProd})" class="btn-tabla-eliminar">Dar de baja</button>`
                 : `<span style="color: #64748b; font-size: 0.85rem;">Inactivo</span>`;
 
             const tr = document.createElement("tr");
@@ -106,8 +195,29 @@ async function cargarProductos(avisar = false) {
     }
 }
 
-async function eliminarProducto(id_producto, nombre) {
-    if (!confirm(`¿Estás seguro de dar de baja el producto "${nombre}"?`)) return;
+async function cargarDatosProductoEditar(id) {
+    try {
+        const res = await fetch("../api/productos/listar.php?status=todos");
+        const productos = await res.json();
+        const producto = productos.find(p => p.id_producto == id);
+
+        if (producto) {
+            document.getElementById("codigo").value = producto.codigo;
+            document.getElementById("nombre").value = producto.nombre;
+            document.getElementById("descripcion").value = producto.descripcion || '';
+            document.getElementById("precio").value = producto.precio;
+            document.getElementById("stock").value = producto.stock;
+        } else {
+            mostrarToast("No se encontró el producto.", "error");
+            setTimeout(() => window.location.href = "indice.php", 1500);
+        }
+    } catch (err) {
+        mostrarToast("Error al cargar los datos del producto.", "error");
+    }
+}
+
+async function eliminarProducto(id_producto) {
+    if (!confirm(`¿Estás seguro de dar de baja el producto?`)) return;
     try {
         const res = await fetch("../api/productos/baja.php", {
             method: "POST",
@@ -138,6 +248,14 @@ function mostrarToast(mensaje, tipo = "exito") {
         toast.classList.remove("visible");
         setTimeout(() => toast.remove(), 300);
     }, 3000);
+}
+
+function limpiarYRecargar() {
+    const inputBuscador = document.getElementById("inputBuscador");
+    if (inputBuscador) inputBuscador.value = "";
+    const selectEstado = document.getElementById("selectFiltroEstado");
+    if (selectEstado) selectEstado.value = "1";
+    cargarProductos(false);
 }
 
 function escapeHtml(text) {

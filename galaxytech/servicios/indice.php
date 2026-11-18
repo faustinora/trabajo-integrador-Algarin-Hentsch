@@ -6,27 +6,21 @@ if (!isset($_SESSION['usuario'])) {
 }
 $panelVolver = ($_SESSION['rol'] === 'admin') ? '../panelAdmin.php' : '../panelVendedor.php';
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Servicios - GalaxyTech</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
-    <style>
-        .filtro-estado-wrapper {
-            max-width: 220px;
-            margin-bottom: 0;
-        }
-    </style>
 </head>
 <body>
-    <main class="container contenedor-principal" style="max-width: 1000px;">
+    <main class="container contenedor-principal contenedor-ancho">
         <a href="<?php echo $panelVolver; ?>" class="link-volver">← Volver al Panel</a>
 
         <div class="header-gestion">
             <h1>Gestión de Servicios Técnicos</h1>
-            <a href="nuevo.php" role="button">+ Nuevo Servicio</a>
+            <a href="nuevo.php" class="btn-nuevo">+ Nuevo Servicio</a>
         </div>
 
         <div class="buscador-inline-container">

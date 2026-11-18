@@ -1,13 +1,9 @@
 use galaxytech_db;
 
 
-INSERT INTO clientes (id_cliente, nombre, apellido, telefono, email, activo) VALUES
-(1, 'Consumidor', 'Final', '0000', '-', 1),
-(2, 'Empresa', 'Uso Interno', '-', 'interno@galaxytech.com', 1),
-
-//ALTER TABLE clientes AUTO_INCREMENT = 3;
-
 INSERT INTO clientes (nombre, apellido, telefono, email, activo) VALUES
+('Consumidor', 'Final', '0000', '-', 1),
+('Empresa', 'Uso Interno', '-', 'interno@galaxytech.com', 1),
 ('Juan', 'Salvador', '3743401122', 'juan.salva@gmail.com', 1),
 ('María', 'Gómez', '3743458899', 'maria.gomez@email.com', 1),
 ('Carlos', 'Rodríguez', '3743493344', 'carlos.rodriguez@hotmail.com', 1);
@@ -29,7 +25,7 @@ INSERT INTO servicios (id_cliente, id_usuario, equipo_descripcion, diagnostico, 
 (5, 2, 'All in One Lenovo', 'Lentitud extrema en el sistema. Se recomienda instalación de SSD y limpieza interna.', 0.00, 'pendiente', NOW(), NULL, 1);
 
 
-INSERT INTO ventas (id_cliente, id_usuario, id_servicio, total, fecha_venta, activo) VALUES
+INSERT INTO ventas (id_cliente, id_usuario, id_servicio, total, fecha_venta, estado) VALUES
 (1, 2, NULL, 45000.00, NOW(), 1),
 (4, 2, NULL, 57000.00, NOW(), 1);
 

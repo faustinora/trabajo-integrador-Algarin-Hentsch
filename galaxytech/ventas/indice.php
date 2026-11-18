@@ -6,12 +6,12 @@ if (!isset($_SESSION['usuario'])) {
 }
 $panelVolver = ($_SESSION['rol'] === 'admin') ? '../panelAdmin.php' : '../panelVendedor.php';
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Ventas - GalaxyTech</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
 </head>
 <body>
@@ -20,7 +20,7 @@ $panelVolver = ($_SESSION['rol'] === 'admin') ? '../panelAdmin.php' : '../panelV
 
         <div class="header-gestion">
             <h1>Gestión de Ventas</h1>
-            <a href="nueva.php" role="button">+ Nueva Venta</a>
+            <a href="nueva.php" class="btn-nuevo">+ Nueva Venta</a>
         </div>
 
         <div class="tarjeta-inventario">

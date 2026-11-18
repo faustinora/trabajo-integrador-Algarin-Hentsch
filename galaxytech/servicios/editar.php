@@ -16,11 +16,10 @@ if ($id_servicio <= 0) {
 <head>
     <meta charset="UTF-8">
     <title>Editar Servicio - GalaxyTech</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
 </head>
 <body>
-    <main class="container contenedor-principal" style="max-width: 650px;">
+    <main class="container contenedor-principal contenedor-mediano">
         <a href="indice.php" class="link-volver">← Volver al Listado</a>
         <h1>Editar Servicio Técnico</h1>
 
@@ -48,77 +47,11 @@ if ($id_servicio <= 0) {
                 </select>
             </label>
 
-            <button type="submit" style="margin-top: 20px;">Guardar</button>
+            <button type="submit" class="btn-principal btn-espaciado">Guardar</button>
         </form>
     </main>
 
     <div id="toastContainer"></div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", async () => {
-            const id = document.getElementById("id_servicio").value;
-            try {
-                const res = await fetch("../api/servicios/listar.php?status=todos");
-                const servicios = await res.json();
-                const servicio = servicios.find(s => s.id_servicio == id);
-
-                if (servicio) {
-                    document.getElementById("equipo_descripcion").value = servicio.equipo_descripcion;
-                    document.getElementById("diagnostico").value = servicio.diagnostico || '';
-                    document.getElementById("costo").value = servicio.costo;
-                    document.getElementById("estado").value = servicio.estado;
-                } else {
-                    mostrarToast("No se encontró el servicio.", "error");
-                    setTimeout(() => window.location.href = "indice.php", 1500);
-                }
-            } catch (err) {
-                mostrarToast("Error al cargar los datos del servicio.", "error");
-            }
-        });
-
-        document.getElementById("formEditarServicio").addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            const datos = {
-                id_servicio: document.getElementById("id_servicio").value,
-                equipo_descripcion: document.getElementById("equipo_descripcion").value.trim(),
-                diagnostico: document.getElementById("diagnostico").value.trim(),
-                costo: parseFloat(document.getElementById("costo").value) || 0,
-                estado: document.getElementById("estado").value
-            };
-
-            try {
-                const res = await fetch("../api/servicios/actualizar.php", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(datos)
-                });
-                const resultado = await res.json();
-
-                if (res.ok && resultado.success) {
-                    mostrarToast(resultado.message, "exito");
-                    setTimeout(() => window.location.href = "indice.php", 1500);
-                } else {
-                    mostrarToast(resultado.message || "Error al actualizar.", "error");
-                }
-            } catch (err) {
-                mostrarToast("Error de conexión con el servidor.", "error");
-            }
-        });
-
-        function mostrarToast(mensaje, tipo = "exito") {
-            const container = document.getElementById("toastContainer");
-            if (!container) return;
-            const toast = document.createElement("div");
-            toast.className = `toast-notificacion ${tipo}`;
-            toast.textContent = mensaje;
-            container.appendChild(toast);
-            setTimeout(() => toast.classList.add("visible"), 10);
-            setTimeout(() => {
-                toast.classList.remove("visible");
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-    </script>
+    <script src="../js/servicios.js"></script>
 </body>
 </html>

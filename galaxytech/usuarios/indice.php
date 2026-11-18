@@ -5,12 +5,12 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'admin') {
     exit();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Usuarios - GalaxyTech</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
 </head>
 <body>
@@ -19,11 +19,18 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'admin') {
 
         <div class="header-gestion">
             <h1>Gestión de Usuarios</h1>
-            <a href="nuevo.php" role="button">+ Nuevo Usuario</a>
+            <a href="nuevo.php" class="btn-nuevo">+ Nuevo Usuario</a>
         </div>
 
-        <div class="buscador-inline-container">
+        <div class="buscador-inline-container buscador-usuarios">
             <input type="text" id="inputBuscador" placeholder="Buscar por nombre de usuario o rol...">
+    
+            <select id="filtroEstado" class="filtro-estado-usuarios">
+                <option value="1" selected>Activos</option>
+                <option value="todos">Todos</option>
+                <option value="0">Inactivos</option>
+            </select>
+
             <button type="button" id="btnBuscar">Buscar</button>
         </div>
 
@@ -34,6 +41,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'admin') {
                     <tr>
                         <th>Usuario</th>
                         <th>Rol</th>
+                        <th>Estado</th>
                         <th class="col-acciones">Acciones</th>
                     </tr>
                 </thead>

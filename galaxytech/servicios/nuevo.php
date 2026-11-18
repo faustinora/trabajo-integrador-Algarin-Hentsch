@@ -5,27 +5,16 @@ if (!isset($_SESSION['usuario'])) {
     exit();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Nuevo Servicio - GalaxyTech</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <link rel="stylesheet" href="../css/estilos.css">
-    <style>
-        .select-cliente-wrapper {
-            display: flex;
-            gap: 10px;
-            align-items: flex-end;
-        }
-        .select-cliente-wrapper select {
-            flex: 1;
-            margin-bottom: 0;
-        }
-    </style>
 </head>
 <body>
-    <main class="container contenedor-principal" style="max-width: 650px;">
+    <main class="container contenedor-principal contenedor-mediano">
         <a href="indice.php" class="link-volver">← Volver al Listado</a>
         <h1>Registrar Nuevo Servicio Técnico</h1>
 
@@ -35,10 +24,10 @@ if (!isset($_SESSION['usuario'])) {
                 <select id="selectCliente" required>
                     <option value="" disabled selected>Cargando clientes...</option>
                 </select>
-                <button type="button" id="btnNuevoClienteModal" class="secondary" style="margin-bottom: 0; width: auto; white-space: nowrap;">+ Nuevo</button>
+                <button type="button" id="btnNuevoClienteModal" class="btn-secundario-inline">+ Nuevo</button>
             </div>
 
-            <label for="equipo_descripcion" style="margin-top: 15px;">Descripción del Equipo / Modelo
+            <label for="equipo_descripcion" class="label-espaciado">Descripción del Equipo / Modelo
                 <input type="text" id="equipo_descripcion" required placeholder="Ej. Notebook HP Pavilion 15 - No enciende">
             </label>
 
@@ -58,100 +47,35 @@ if (!isset($_SESSION['usuario'])) {
                 </select>
             </label>
 
-            <button type="submit" style="margin-top: 20px;">Guardar Servicio</button>
+            <button type="submit" class="btn-principal btn-espaciado">Guardar Servicio</button>
         </form>
     </main>
 
+    <div id="modalCliente" class="modal-overlay" style="display: none;">
+    <div class="modal-content contenedor-mediano">
+        <h3>Registrar Nuevo Cliente</h3>
+        <form id="formModalCliente">
+            <label for="modal_apellido">Apellido
+                <input type="text" id="modal_apellido" required>
+            </label>
+            <label for="modal_nombre">Nombre
+                <input type="text" id="modal_nombre" required>
+            </label>
+            <label for="modal_telefono">Teléfono
+                <input type="text" id="modal_telefono">
+            </label>
+            <label for="modal_email">Email (opcional)
+                <input type="email" id="modal_email">
+            </label>
+            <div class="modal-acciones" style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="submit" class="btn-principal">Guardar Cliente</button>
+                <button type="button" id="btnCerrarModal" class="secondary">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
     <div id="toastContainer"></div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", async () => {
-            await cargarSelectClientes();
-
-            document.getElementById("btnNuevoClienteModal").addEventListener("click", async () => {
-                const apellido = prompt("Ingrese el Apellido del nuevo cliente:");
-                if (!apellido) return;
-                const nombre = prompt("Ingrese el Nombre del cliente:");
-                if (!nombre) return;
-                const telefono = prompt("Ingrese el Teléfono:") || "";
-                const email = prompt("Ingrese el Email (opcional):") || "";
-
-                try {
-                    const res = await fetch("../api/clientes/guardar.php", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ nombre, apellido, telefono, email })
-                    });
-                    const data = await res.json();
-                    if (res.ok && data.success) {
-                        mostrarToast("Cliente registrado.", "exito");
-                        await cargarSelectClientes();
-                    } else {
-                        mostrarToast(data.message || "No se pudo registrar.", "error");
-                    }
-                } catch (err) {
-                    mostrarToast("Error de conexión al registrar cliente.", "error");
-                }
-            });
-        });
-
-        async function cargarSelectClientes() {
-            try {
-                const res = await fetch("../api/clientes/listar.php");
-                const clientes = await res.json();
-                const select = document.getElementById("selectCliente");
-                select.innerHTML = '<option value="" disabled selected>-- Seleccione un cliente --</option>';
-                clientes.forEach(c => {
-                    select.innerHTML += `<option value="${c.id_cliente}">${c.nombre}, ${c.apellido} (${c.telefono})</option>`;
-                });
-            } catch (err) {
-                mostrarToast("Error al cargar clientes", "error");
-            }
-        }
-
-        document.getElementById("formNuevoServicio").addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            const datos = {
-                id_cliente: document.getElementById("selectCliente").value,
-                equipo_descripcion: document.getElementById("equipo_descripcion").value.trim(),
-                diagnostico: document.getElementById("diagnostico").value.trim(),
-                costo: parseFloat(document.getElementById("costo").value) || 0,
-                estado: document.getElementById("estado").value
-            };
-
-            try {
-                const res = await fetch("../api/servicios/guardar.php", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(datos)
-                });
-                const resultado = await res.json();
-
-                if (res.ok && resultado.success) {
-                    mostrarToast(resultado.message, "exito");
-                    setTimeout(() => window.location.href = "indice.php", 1500);
-                } else {
-                    mostrarToast(resultado.message || "Error al registrar el servicio.", "error");
-                }
-            } catch (err) {
-                mostrarToast("Error de conexión con el servidor.", "error");
-            }
-        });
-
-        function mostrarToast(mensaje, tipo = "exito") {
-            const container = document.getElementById("toastContainer");
-            if (!container) return;
-            const toast = document.createElement("div");
-            toast.className = `toast-notificacion ${tipo}`;
-            toast.textContent = mensaje;
-            container.appendChild(toast);
-            setTimeout(() => toast.classList.add("visible"), 10);
-            setTimeout(() => {
-                toast.classList.remove("visible");
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-    </script>
+    <script src="../js/servicios.js"></script>
 </body>
 </html>
