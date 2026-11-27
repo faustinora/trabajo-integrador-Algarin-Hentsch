@@ -48,21 +48,21 @@ CREATE TABLE ventas (
     id_venta INT AUTO_INCREMENT PRIMARY KEY,
     id_cliente INT NOT NULL DEFAULT 1,
     id_usuario INT NOT NULL,
-    id_servicio INT NULL DEFAULT NULL,
     total DECIMAL(10,2) NOT NULL,
     fecha_venta DATETIME DEFAULT CURRENT_TIMESTAMP,
     estado TINYINT(1) DEFAULT 1,
     FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente),
-    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
-    FOREIGN KEY (id_servicio) REFERENCES servicios(id_servicio)
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
 );
 
 CREATE TABLE detalle_ventas (
     id_detalle_venta INT AUTO_INCREMENT PRIMARY KEY,
     id_venta INT NOT NULL,
-    id_producto INT NOT NULL,
+    id_producto INT NULL DEFAULT NULL,
+    id_servicio INT NULL DEFAULT NULL,
     cantidad INT NOT NULL,
     precio_unitario DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (id_venta) REFERENCES ventas(id_venta),
-    FOREIGN KEY (id_producto) REFERENCES productos(id_producto)
+    FOREIGN KEY (id_producto) REFERENCES productos(id_producto),
+    FOREIGN KEY (id_servicio) REFERENCES servicios(id_servicio)
 );

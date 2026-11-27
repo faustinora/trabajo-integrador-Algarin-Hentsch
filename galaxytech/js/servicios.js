@@ -211,42 +211,78 @@ function limpiarYRecargar() {
 function inicializarNuevoServicio() {
     cargarSelectClientes();
 
-    document.getElementById("btnNuevoClienteModal").addEventListener("click", async () => {
-        const apellido = prompt("Ingrese el Apellido del nuevo cliente:");
-        if (!apellido) return;
-        const nombre = prompt("Ingrese el Nombre del cliente:");
-        if (!nombre) return;
-        const telefono = prompt("Ingrese el Teléfono:") || "";
-        const email = prompt("Ingrese el Email (opcional):") || "";
+    const btnNuevoClienteModal = document.getElementById("btnNuevoClienteModal");
+    const modalCliente = document.getElementById("modalCliente");
+    const btnCerrarModal = document.getElementById("btnCerrarModal");
+    const formModalCliente = document.getElementById("formModalCliente");
 
-        try {
-            const res = await fetch("../api/clientes/guardar.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nombre, apellido, telefono, email })
-            });
-            const data = await res.json();
-            if (res.ok && data.success) {
-                mostrarToast("Cliente registrado.", "exito");
-                await cargarSelectClientes();
-            } else {
-                mostrarToast(data.message || "No se pudo registrar.", "error");
+    if (btnNuevoClienteModal && modalCliente) {
+        btnNuevoClienteModal.addEventListener("click", () => {
+            modalCliente.style.display = "flex";
+        });
+    }
+
+    if (btnCerrarModal && modalCliente) {
+        btnCerrarModal.addEventListener("click", () => {
+            modalCliente.style.display = "none";
+            if (formModalCliente) formModalCliente.reset();
+        });
+    }
+
+    if (formModalCliente) {
+        formModalCliente.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const apellido = document.getElementById("modal_apellido").value.trim();
+            const nombre = document.getElementById("modal_nombre").value.trim();
+            const telefono = document.getElementById("modal_telefono").value.trim();
+            const email = document.getElementById("modal_email").value.trim();
+
+            if (!apellido || !nombre) {
+                mostrarToast("Nombre y apellido son obligatorios.", "error");
+                return;
             }
-        } catch (err) {
-            mostrarToast("Error de conexión al registrar cliente.", "error");
-        }
-    });
+
+            try {
+                const res = await fetch("../api/clientes/guardar.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nombre, apellido, telefono, email })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    mostrarToast("Cliente registrado.", "exito");
+                    modalCliente.style.display = "none";
+                    formModalCliente.reset();
+                    await cargarSelectClientes();
+                    if (data.id_cliente) {
+                        const selectCliente = document.getElementById("selectCliente");
+                        if (selectCliente) selectCliente.value = data.id_cliente;
+                    }
+                } else {
+                    mostrarToast(data.message || "No se pudo registrar.", "error");
+                }
+            } catch (err) {
+                mostrarToast("Error de conexión al registrar cliente.", "error");
+            }
+        });
+    }
 
     document.getElementById("formNuevoServicio").addEventListener("submit", async (e) => {
         e.preventDefault();
 
+        const costoVal = parseFloat(document.getElementById("costo").value);
         const datos = {
             id_cliente: document.getElementById("selectCliente").value,
             equipo_descripcion: document.getElementById("equipo_descripcion").value.trim(),
             diagnostico: document.getElementById("diagnostico").value.trim(),
-            costo: parseFloat(document.getElementById("costo").value) || 0,
+            costo: Number.isNaN(costoVal) ? 0 : costoVal,
             estado: document.getElementById("estado").value
         };
+
+        if (datos.costo < 0) {
+            mostrarToast("El costo no puede ser negativo.", "error");
+            return;
+        }
 
         try {
             const res = await fetch("../api/servicios/guardar.php", {

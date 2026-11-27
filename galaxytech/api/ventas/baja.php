@@ -23,7 +23,6 @@ if ($id_venta <= 0) {
 $conn->begin_transaction();
 
 try {
-    // Verificar si la venta existe y su estado actual
     $stmtCheck = $conn->prepare("SELECT estado FROM ventas WHERE id_venta = ? FOR UPDATE");
     $stmtCheck->bind_param("i", $id_venta);
     $stmtCheck->execute();
@@ -37,29 +36,38 @@ try {
         throw new Exception("La venta ya se encuentra anulada.");
     }
 
-    // Obtener los detalles para restaurar el stock
-    $stmtDetalles = $conn->prepare("SELECT id_producto, cantidad FROM detalle_ventas WHERE id_venta = ?");
+    $stmtDetalles = $conn->prepare("SELECT id_producto, id_servicio, cantidad FROM detalle_ventas WHERE id_venta = ?");
     $stmtDetalles->bind_param("i", $id_venta);
     $stmtDetalles->execute();
     $resDetalles = $stmtDetalles->get_result();
 
     $stmtStockRest = $conn->prepare("UPDATE productos SET stock = stock + ? WHERE id_producto = ?");
+    $stmtServReset = $conn->prepare("UPDATE servicios SET estado = 'completado', fecha_entrega = NULL WHERE id_servicio = ?");
 
     while ($det = $resDetalles->fetch_assoc()) {
-        $stmtStockRest->bind_param("ii", $det['cantidad'], $det['id_producto']);
-        $stmtStockRest->execute();
+        if (!empty($det['id_producto']) && (int)$det['cantidad'] > 0) {
+            $cant = (int)$det['cantidad'];
+            $idProd = (int)$det['id_producto'];
+            $stmtStockRest->bind_param("ii", $cant, $idProd);
+            $stmtStockRest->execute();
+        }
+        if (!empty($det['id_servicio'])) {
+            $idServ = (int)$det['id_servicio'];
+            $stmtServReset->bind_param("i", $idServ);
+            $stmtServReset->execute();
+        }
     }
     $stmtDetalles->close();
     $stmtStockRest->close();
+    $stmtServReset->close();
 
-    // Marcar la venta como anulada (estado = 0)
     $stmtBaja = $conn->prepare("UPDATE ventas SET estado = 0 WHERE id_venta = ?");
     $stmtBaja->bind_param("i", $id_venta);
     $stmtBaja->execute();
     $stmtBaja->close();
 
     $conn->commit();
-    echo json_encode(['success' => true, 'message' => 'Venta anulada y stock restaurado correctamente.']);
+    echo json_encode(['success' => true, 'message' => 'Venta anulada, stock restaurado y servicio revertido a completado.']);
 
 } catch (Exception $e) {
     $conn->rollback();

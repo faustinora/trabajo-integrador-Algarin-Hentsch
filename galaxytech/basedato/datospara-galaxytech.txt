@@ -1,35 +1,28 @@
-use galaxytech_db;
-
-
-INSERT INTO clientes (nombre, apellido, telefono, email, activo) VALUES
-('Consumidor', 'Final', '0000', '-', 1),
-('Empresa', 'Uso Interno', '-', 'interno@galaxytech.com', 1),
-('Juan', 'Salvador', '3743401122', 'juan.salva@gmail.com', 1),
-('María', 'Gómez', '3743458899', 'maria.gomez@email.com', 1),
-('Carlos', 'Rodríguez', '3743493344', 'carlos.rodriguez@hotmail.com', 1);
+USE galaxytech_db;
 
 INSERT INTO usuarios (usuario, clave, rol, activo) VALUES
 ('admin', '$2y$12$/hqhTQcjhYrgn8pBBa/9YuOT7dAYRW0gTe.Gl/xtNfNg1Eu21ssSO', 'admin', 1),
 ('vendedor1', '$2y$12$KJ4waz85GpLbpB2qLL12duECUqTVpTHR5k3AbDnEGBoNmAxVQLXIO', 'vendedor', 1);
 
 
+INSERT INTO clientes (nombre, apellido, telefono, email, activo) VALUES
+('Consumidor', 'Final', '000000', 'consfin@ejemplo.com', 1),
+('Empresa', 'Uso Interno', '1234567', 'galaxy@empresa.com', 1),
+('Juan', 'Salvador', '3743401122', 'juan.salvador@ejemplo.com', 1),
+('María', 'Gómez', '3743403344', 'maria.gomez@ejemplo.com', 1),
+('Carlos', 'Rodríguez', '3743405566', 'carlos.rodriguez@ejemplo.com', 1),
+('Lucía', 'Fernández', '3743407788', 'lucia.fernandez@ejemplo.com', 1);
+
+
 INSERT INTO productos (codigo, nombre, descripcion, precio, stock, activo) VALUES
-('PROD001', 'Disco Sólido SSD 480GB', 'Disco SSD SATA3 Kingston A400 2.5"', 45000.00, 15, 1),
-('PROD002', 'Memoria RAM 8GB DDR4', 'Memoria RAM Kingston Fury Beast DDR4 2666MHz', 28500.00, 20, 1),
-('PROD003', 'Fuente 600W 80 Plus', 'Fuente de alimentación certificada 80 Plus Bronze', 62000.00, 8, 1);
+('PROD-001', 'SSD NVMe 500GB', 'Unidad de estado sólido M.2 de alta velocidad', 45000.00, 12, 1),
+('PROD-002', 'Memoria RAM DDR4 8GB', 'Módulo 3200MHz para notebook o PC', 28000.00, 15, 1),
+('PROD-003', 'Conector Jack DC Universal', 'Repuesto de ficha de carga para notebooks', 6500.00, 25, 1),
+('PROD-004', 'Pasta Térmica Artic 4g', 'Compuesto térmico de alto rendimiento', 8000.00, 20, 1);
 
 
 INSERT INTO servicios (id_cliente, id_usuario, equipo_descripcion, diagnostico, costo, estado, fecha_ingreso, fecha_entrega, activo) VALUES
-(3, 2, 'Notebook HP Pavilion', 'No enciende. Se realiza cambio de conector de carga y mantenimiento general.', 25000.00, 'en proceso', NOW(), NULL, 1),
-(4, 2, 'PC de Escritorio Banghó', 'Pantalla azul frecuente. Se reemplaza módulo de memoria RAM defectuoso.', 18000.00, 'en proceso', NOW(), NULL, 1),
-(5, 2, 'All in One Lenovo', 'Lentitud extrema en el sistema. Se recomienda instalación de SSD y limpieza interna.', 0.00, 'pendiente', NOW(), NULL, 1);
-
-
-INSERT INTO ventas (id_cliente, id_usuario, id_servicio, total, fecha_venta, estado) VALUES
-(1, 2, NULL, 45000.00, NOW(), 1),
-(4, 2, NULL, 57000.00, NOW(), 1);
-
-
-INSERT INTO detalle_ventas (id_venta, id_producto, cantidad, precio_unitario) VALUES
-(1, 1, 1, 45000.00),
-(2, 2, 2, 28500.00);
+(1, 2, 'Notebook HP Pavilion 15', 'No enciende, posible falla en conector de carga y limpieza interna.', 0.00, 'pendiente', '2026-11-25 09:30:00', NULL, 1),
+(2, 2, 'PC de Escritorio Banghó', 'Pantalla azul intermitente; se está probando memoria RAM y disco.', 18000.00, 'en proceso', '2026-11-25 14:15:00', NULL, 1),
+(3, 1, 'All in One Lenovo', 'Equipo lento al iniciar; pendiente de revisión técnica.', 0.00, 'pendiente', '2026-11-26 10:00:00', NULL, 1),
+(4, 2, 'Notebook Lenovo IdeaPad', 'Sobrecalentamiento y ruido en cooler; en proceso de mantenimiento.', 22000.00, 'en proceso', '2026-11-26 16:40:00', NULL, 1);

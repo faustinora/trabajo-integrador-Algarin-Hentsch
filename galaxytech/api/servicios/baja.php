@@ -20,7 +20,7 @@ if ($id_servicio <= 0) {
     exit();
 }
 
-$stmt = $conn->prepare("UPDATE servicios SET activo = 0 WHERE id = ?");
+$stmt = $conn->prepare("UPDATE servicios SET activo = 0 WHERE id_servicio = ?");
 $stmt->bind_param("i", $id_servicio);
 
 if ($stmt->execute()) {
