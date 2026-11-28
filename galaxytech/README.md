@@ -18,7 +18,9 @@ HTML5 · CSS3 · JavaScript (Fetch API) · PHP · MySQL · Git
 | Vendedor | `vendedor1` | `vendedor123` |
 
 ## Capturas
-![Pantalla principal](docs/img/home.png)
+![Pantalla principal](galaxytech/docs/img/home.png)
+![Panel Administrador](galaxytech/docs/img/admin.png)
+![Panel Vendedor](galaxytech/docs/img/vendedor.png)
 
 ## Versión actual
 v1.0.0 — ver [CHANGELOG](CHANGELOG.md)
