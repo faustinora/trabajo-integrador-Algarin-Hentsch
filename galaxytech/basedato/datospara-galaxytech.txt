@@ -22,7 +22,7 @@ INSERT INTO productos (codigo, nombre, descripcion, precio, stock, activo) VALUE
 
 
 INSERT INTO servicios (id_cliente, id_usuario, equipo_descripcion, diagnostico, costo, estado, fecha_ingreso, fecha_entrega, activo) VALUES
-(1, 2, 'Notebook HP Pavilion 15', 'No enciende, posible falla en conector de carga y limpieza interna.', 0.00, 'pendiente', '2026-11-25 09:30:00', NULL, 1),
-(2, 2, 'PC de Escritorio Banghó', 'Pantalla azul intermitente; se está probando memoria RAM y disco.', 18000.00, 'en proceso', '2026-11-25 14:15:00', NULL, 1),
-(3, 1, 'All in One Lenovo', 'Equipo lento al iniciar; pendiente de revisión técnica.', 0.00, 'pendiente', '2026-11-26 10:00:00', NULL, 1),
-(4, 2, 'Notebook Lenovo IdeaPad', 'Sobrecalentamiento y ruido en cooler; en proceso de mantenimiento.', 22000.00, 'en proceso', '2026-11-26 16:40:00', NULL, 1);
+(3, 2, 'Notebook HP Pavilion 15', 'No enciende, posible falla en conector de carga y limpieza interna.', 0.00, 'pendiente', '2026-11-25 09:30:00', NULL, 1),
+(4, 2, 'PC de Escritorio Banghó', 'Pantalla azul intermitente; se está probando memoria RAM y disco.', 18000.00, 'en proceso', '2026-11-25 14:15:00', NULL, 1),
+(5, 1, 'All in One Lenovo', 'Equipo lento al iniciar; pendiente de revisión técnica.', 0.00, 'pendiente', '2026-11-26 10:00:00', NULL, 1),
+(6, 2, 'Notebook Lenovo IdeaPad', 'Sobrecalentamiento y ruido en cooler; en proceso de mantenimiento.', 22000.00, 'en proceso', '2026-11-26 16:40:00', NULL, 1);

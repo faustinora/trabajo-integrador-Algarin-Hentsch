@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// --- LISTADO / ÍNDICE ---
+
 function inicializarIndiceServicios() {
     cargarServicios(false);
 
@@ -205,7 +205,7 @@ function limpiarYRecargar() {
     cargarServicios(false);
 }
 
-// --- MODAL COMPARTIDO DE CLIENTE ---
+
 function configurarModalCliente(onClienteCreado = null) {
     const btnNuevoClienteModal = document.getElementById("btnNuevoClienteModal");
     const modalCliente = document.getElementById("modalCliente");
@@ -261,7 +261,7 @@ function configurarModalCliente(onClienteCreado = null) {
     });
 }
 
-// --- NUEVO SERVICIO ---
+
 function inicializarNuevoServicio() {
     cargarSelectClientes();
 
@@ -340,7 +340,7 @@ async function cargarSelectClientes() {
     }
 }
 
-// --- EDITAR SERVICIO ---
+
 function inicializarEditarServicio() {
     const id = Number(document.getElementById("id_servicio")?.value || 0);
     if (id <= 0) return;
@@ -418,7 +418,6 @@ function inicializarEditarServicio() {
     });
 }
 
-// --- UTILIDADES GLOBALES ---
 function mostrarToast(mensaje, tipo = "exito") {
     const container = document.getElementById("toastContainer");
     if (!container) return;

@@ -1,10 +1,7 @@
 let listaProductosGlobal = [];
-
-/* ==========================================================================
-   INICIALIZACIÓN VISTA ACTIVA
-   ========================================================================== */
+//inicio
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. Lógica vista de Historial de Ventas
+    //Historial de Ventas
     const tablaVentasBody = document.getElementById("tabla-ventas-body");
     if (tablaVentasBody) {
         cargarVentas(false);
@@ -45,7 +42,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // 2. Lógica Registrar Nueva Venta / Cobro de Servicio
+    //Nueva Venta / Cobro de Servicio
     const formNuevaVenta = document.getElementById("formNuevaVenta");
     if (formNuevaVenta) {
         await cargarSelectClientes();
@@ -104,7 +101,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         formNuevaVenta.addEventListener("submit", guardarNuevaVenta);
     }
 
-    // 3. Lógica del modal de cliente rápido en nueva venta
+    // cliente rápido
     const modalCliente = document.getElementById("modalNuevoCliente");
     const btnAbrirModal = document.getElementById("btnAbrirModalCliente");
     const btnCerrarModal = document.getElementById("btnCerrarModalCliente");
@@ -168,9 +165,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 });
 
-/* ==========================================================================
-   MÓDULO 1: HISTORIAL Y ANULACIÓN DE VENTAS
-   ========================================================================== */
+
 async function cargarVentas(avisar = false) {
     try {
         const inputBuscador = document.getElementById("inputBuscador");
@@ -272,9 +267,6 @@ function limpiarYRecargar() {
     cargarVentas(false);
 }
 
-/* ==========================================================================
-   MÓDULO 2: REGISTRO DE NUEVA VENTA Y CARRITO
-   ========================================================================== */
 async function cargarSelectClientes() {
     try {
         const res = await fetch("../api/clientes/listar.php");
@@ -443,9 +435,6 @@ async function guardarNuevaVenta(e) {
     }
 }
 
-/* ==========================================================================
-   UTILIDADES COMPARTIDAS
-   ========================================================================== */
 function mostrarToast(mensaje, tipo = "exito") {
     const container = document.getElementById("toastContainer");
     if (!container) return;
