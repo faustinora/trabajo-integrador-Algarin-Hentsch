@@ -162,3 +162,136 @@
 .texto-ver-detalle { font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px; }
 .btn-espaciado { margin-top: 1.5rem; }
 .label-espaciado { margin-top: 15px; }
+
+
+/* Filas vacías, textos auxiliares y alineación de celdas */
+.celda-vacia {
+    text-align: center;
+    padding: 2rem;
+}
+
+.texto-vacio {
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+}
+
+.btn-inline-auto {
+    display: inline-block;
+    width: auto;
+    padding: 0.5rem 1.2rem;
+}
+
+.texto-inactivo-accion {
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+.texto-vendedor {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.celda-derecha {
+    text-align: right;
+}
+
+.celda-centrada {
+    text-align: center;
+}
+
+.texto-peligro {
+    color: #ef4444;
+}
+
+/* Modales y bloque de cobro de servicio */
+#infoServicioCobro {
+    display: none;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+#infoServicioCobro.activo {
+    display: block;
+}
+
+.titulo-servicio-cobro {
+    margin-top: 0;
+    color: #1e293b;
+}
+
+.detalle-servicio-cobro {
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+
+.monto-servicio-cobro {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #16a34a;
+    margin: 0;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+}
+
+.modal-overlay.activo {
+    display: flex;
+}
+
+.modal-tarjeta-clara {
+    background: #ffffff;
+    color: #1e293b;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.modal-tarjeta-clara h3,
+.modal-tarjeta-clara label {
+    color: #1e293b;
+}
+
+.modal-tarjeta-clara small {
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+.modal-acciones {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.select-cliente-flex {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.select-cliente-flex select {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.btn-cliente-inline {
+    width: auto;
+    padding: 0.6rem 1rem;
+    margin-bottom: 0;
+}
+
+.input-tabla-compacto {
+    margin-bottom: 0;
+}

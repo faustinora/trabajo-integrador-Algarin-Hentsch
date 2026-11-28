@@ -1,11 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
-
-    // 1. Lógica para listar (indice)
     const inputBuscador = document.getElementById("inputBuscador");
     const selectEstado = document.getElementById("selectFiltroEstado");
     const btnBuscar = document.getElementById("btnBuscar");
+    const tbody = document.getElementById("tabla-productos-body");
 
-    if (document.getElementById("tabla-productos-body")) {
+    if (tbody) {
         cargarProductos(false);
 
         if (inputBuscador) {
@@ -27,9 +26,21 @@ document.addEventListener("DOMContentLoaded", () => {
         if (selectEstado) {
             selectEstado.addEventListener("change", () => cargarProductos(false));
         }
+
+        tbody.addEventListener("click", (e) => {
+            const btnLimpiar = e.target.closest("[data-accion='limpiar-productos']");
+            if (btnLimpiar) {
+                limpiarYRecargar();
+                return;
+            }
+
+            const btnBaja = e.target.closest("[data-accion='baja-producto']");
+            if (btnBaja) {
+                eliminarProducto(Number(btnBaja.dataset.id));
+            }
+        });
     }
 
-    // 2. Lógica para form NUEVO
     const formNuevoProducto = document.getElementById("formNuevoProducto");
     if (formNuevoProducto) {
         formNuevoProducto.addEventListener("submit", async (e) => {
@@ -39,8 +50,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 codigo: document.getElementById("codigo").value.trim(),
                 nombre: document.getElementById("nombre").value.trim(),
                 descripcion: document.getElementById("descripcion").value.trim(),
-                precio: parseFloat(document.getElementById("precio").value),
-                stock: parseInt(document.getElementById("stock").value)
+                precio: Number.parseFloat(document.getElementById("precio").value),
+                stock: Number.parseInt(document.getElementById("stock").value, 10)
             };
 
             try {
@@ -53,7 +64,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (res.ok && resultado.success) {
                     mostrarToast(resultado.message, "exito");
-                    setTimeout(() => window.location.href = "indice.php", 1500);
+                    setTimeout(() => {
+                        window.location.href = "indice.php";
+                    }, 1500);
                 } else {
                     mostrarToast(resultado.message || "Error al registrar.", "error");
                 }
@@ -63,7 +76,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 3. Lógica para form EDITAR
     const formEditarProducto = document.getElementById("formEditarProducto");
     if (formEditarProducto) {
         const idInput = document.getElementById("id_producto");
@@ -79,8 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 codigo: document.getElementById("codigo").value.trim(),
                 nombre: document.getElementById("nombre").value.trim(),
                 descripcion: document.getElementById("descripcion").value.trim(),
-                precio: parseFloat(document.getElementById("precio").value),
-                stock: parseInt(document.getElementById("stock").value)
+                precio: Number.parseFloat(document.getElementById("precio").value),
+                stock: Number.parseInt(document.getElementById("stock").value, 10)
             };
 
             try {
@@ -93,7 +105,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (res.ok && resultado.success) {
                     mostrarToast(resultado.message, "exito");
-                    setTimeout(() => window.location.href = "indice.php", 1500);
+                    setTimeout(() => {
+                        window.location.href = "indice.php";
+                    }, 1500);
                 } else {
                     mostrarToast(resultado.message || "Error al actualizar.", "error");
                 }
@@ -104,18 +118,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-
-// --- FUNCIONES AUXILIARES ---
-
 async function cargarProductos(avisar = false) {
     try {
         const termino = document.getElementById("inputBuscador").value.trim();
         const estado = document.getElementById("selectFiltroEstado").value;
 
-        let url = `../api/productos/listar.php?status=${estado}`;
-        if (termino) url += `&q=${encodeURIComponent(termino)}`;
+        const params = new URLSearchParams({ status: estado });
+        if (termino) {
+            params.set("q", termino);
+        }
 
-        const res = await fetch(url);
+        const res = await fetch(`../api/productos/listar.php?${params.toString()}`);
         const data = await res.json();
         const productos = Array.isArray(data) ? data : (data.productos || data.data || []);
 
@@ -131,47 +144,45 @@ async function cargarProductos(avisar = false) {
             }
         }
 
+        if (!tbody) return;
         tbody.innerHTML = "";
 
         if (productos.length === 0) {
-            if (avisar) {
-                mostrarToast("No se encontraron coincidencias.", "error");
-            }
             tbody.innerHTML = `
                 <tr>
-                    <td colspan='6' style='text-align: center; padding: 2rem;'>
-                        <p style="margin-bottom: 1rem; color: #94a3b8;">No se encontraron productos.</p>
-                        <button type="button" class="secondary" onclick="limpiarYRecargar()" style="display: inline-block; width: auto; padding: 0.5rem 1.2rem;">Actualizar</button>
+                    <td colspan="6" class="celda-vacia">
+                        <p class="texto-vacio">No se encontraron productos.</p>
+                        <button type="button" class="secondary btn-inline-auto" data-accion="limpiar-productos">Actualizar</button>
                     </td>
                 </tr>`;
             if (totalElem) totalElem.innerHTML = "<strong>Total:</strong> 0 productos";
-            if (spanValorInv) spanValorInv.textContent = "$0.00";
+            if (spanValorInv) spanValorInv.textContent = formatoPesos.format(0);
             return;
         }
 
         let valorInventarioTotal = 0;
 
-        productos.forEach(p => {
-            const idProd = p.id_producto;
-            const precio = parseFloat(p.precio) || 0;
-            const stock = parseInt(p.stock) || 0;
-            const esActivo = parseInt(p.activo) === 1;
+        productos.forEach((p) => {
+            const idProd = Number(p.id_producto);
+            const precio = Number.parseFloat(p.precio) || 0;
+            const stock = Number.parseInt(p.stock, 10) || 0;
+            const esActivo = Number.parseInt(p.activo, 10) === 1;
 
             if (esActivo) {
                 valorInventarioTotal += precio * stock;
             }
 
-            const badgeEstado = esActivo 
-                ? '<span style="background-color: #bbf7d0; color: #166534; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">Activo</span>'
-                : '<span style="background-color: #fecaca; color: #991b1b; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">Inactivo</span>';
+            const badgeEstado = esActivo
+                ? '<span class="badge-activo">Activo</span>'
+                : '<span class="badge-inactivo">Inactivo</span>';
 
             const badgeStock = stock <= 5 && esActivo
-                ? `<span style="background-color: #fef08a; color: #854d0e; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${stock} (Bajo)</span>`
-                : stock;
+                ? `<span class="badge-stock-bajo">${stock} (Bajo)</span>`
+                : String(stock);
 
             const botonAccion = esActivo
-                ? `<button onclick="eliminarProducto(${idProd})" class="btn-tabla-eliminar">Dar de baja</button>`
-                : `<span style="color: #64748b; font-size: 0.85rem;">Inactivo</span>`;
+                ? `<button type="button" data-accion="baja-producto" data-id="${idProd}" class="btn-tabla-eliminar">Dar de baja</button>`
+                : `<span class="texto-inactivo-accion">Inactivo</span>`;
 
             const tr = document.createElement("tr");
             tr.innerHTML = `
@@ -189,7 +200,7 @@ async function cargarProductos(avisar = false) {
         });
 
         if (totalElem) totalElem.innerHTML = `<strong>Total:</strong> ${productos.length} producto(s)`;
-        if (spanValorInv) spanValorInv.textContent = `$${valorInventarioTotal.toFixed(2)}`;
+        if (spanValorInv) spanValorInv.textContent = formatoPesos.format(valorInventarioTotal);
     } catch (err) {
         mostrarToast("Error al cargar el inventario.", "error");
     }
@@ -199,17 +210,19 @@ async function cargarDatosProductoEditar(id) {
     try {
         const res = await fetch("../api/productos/listar.php?status=todos");
         const productos = await res.json();
-        const producto = productos.find(p => p.id_producto == id);
+        const producto = Array.isArray(productos) ? productos.find((p) => p.id_producto == id) : null;
 
         if (producto) {
-            document.getElementById("codigo").value = producto.codigo;
-            document.getElementById("nombre").value = producto.nombre;
-            document.getElementById("descripcion").value = producto.descripcion || '';
-            document.getElementById("precio").value = producto.precio;
-            document.getElementById("stock").value = producto.stock;
+            document.getElementById("codigo").value = producto.codigo || "";
+            document.getElementById("nombre").value = producto.nombre || "";
+            document.getElementById("descripcion").value = producto.descripcion || "";
+            document.getElementById("precio").value = producto.precio ?? 0;
+            document.getElementById("stock").value = producto.stock ?? 0;
         } else {
             mostrarToast("No se encontró el producto.", "error");
-            setTimeout(() => window.location.href = "indice.php", 1500);
+            setTimeout(() => {
+                window.location.href = "indice.php";
+            }, 1500);
         }
     } catch (err) {
         mostrarToast("Error al cargar los datos del producto.", "error");
@@ -217,7 +230,7 @@ async function cargarDatosProductoEditar(id) {
 }
 
 async function eliminarProducto(id_producto) {
-    if (!confirm(`¿Estás seguro de dar de baja el producto?`)) return;
+    if (!confirm("¿Estás seguro de dar de baja el producto?")) return;
     try {
         const res = await fetch("../api/productos/baja.php", {
             method: "POST",
@@ -227,7 +240,7 @@ async function eliminarProducto(id_producto) {
         const data = await res.json();
         if (data.success) {
             mostrarToast("Producto dado de baja.", "exito");
-            cargarProductos();
+            cargarProductos(false);
         } else {
             mostrarToast(data.message || "No se pudo dar de baja.", "error");
         }
@@ -258,7 +271,13 @@ function limpiarYRecargar() {
     cargarProductos(false);
 }
 
+const formatoPesos = new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    maximumFractionDigits: 0
+});
+
 function escapeHtml(text) {
-    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-    return String(text || '').replace(/[&<>"']/g, m => map[m]);
+    const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+    return String(text || "").replace(/[&<>"']/g, (m) => map[m]);
 }

@@ -27,6 +27,22 @@ document.addEventListener("DOMContentLoaded", async () => {
                 cargarVentas(true);
             });
         }
+
+        tablaVentasBody.addEventListener("click", (e) => {
+            const btnLimpiar = e.target.closest("[data-accion='limpiar-ventas']");
+            if (btnLimpiar) {
+                limpiarYRecargar();
+                return;
+            }
+
+            const btnAnular = e.target.closest("[data-accion='anular-venta']");
+            if (btnAnular) {
+                const idVenta = Number(btnAnular.dataset.id);
+                if (idVenta > 0) {
+                    anularVenta(idVenta);
+                }
+            }
+        });
     }
 
     // 2. Lógica Registrar Nueva Venta / Cobro de Servicio
@@ -35,11 +51,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         await cargarSelectClientes();
         await cargarProductosGlobal();
 
-        // Leer parámetros URL si viene desde servicios
         const params = new URLSearchParams(window.location.search);
         const idServicioParam = params.get("id_servicio");
         const idClienteParam = params.get("id_cliente");
-        const costoServicio = parseFloat(params.get("costo")) || 0;
+        const costoServicio = Number.parseFloat(params.get("costo")) || 0;
         const descEquipo = params.get("equipo") || "Servicio Técnico";
 
         if (idClienteParam) {
@@ -48,21 +63,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         formNuevaVenta.dataset.idServicio = idServicioParam || "";
-        formNuevaVenta.dataset.costoServicio = costoServicio;
+        formNuevaVenta.dataset.costoServicio = String(costoServicio);
 
-        // Si viene de un servicio, mostramos el panel informativo
         if (idServicioParam) {
             const infoServicio = document.getElementById("infoServicioCobro");
             const txtDetalle = document.getElementById("txtDetalleEquipo");
             const lblCosto = document.getElementById("lblCostoServicio");
 
-            if (infoServicio) infoServicio.style.display = "block";
+            if (infoServicio) infoServicio.classList.add("activo");
             if (txtDetalle) txtDetalle.textContent = `Equipo / Reparación: ${descEquipo}`;
             if (lblCosto) lblCosto.textContent = `$${costoServicio.toFixed(2)}`;
-            
+
             calcularTotalGeneral();
         } else {
-            agregarFilaCarrito(); // Fila vacía inicial solo si es venta normal de productos
+            agregarFilaCarrito();
         }
 
         const btnAddProducto = document.getElementById("btnAddProducto");
@@ -73,10 +87,24 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
         }
 
+        const tbodyCarrito = document.getElementById("tablaCarritoBody");
+        if (tbodyCarrito) {
+            tbodyCarrito.addEventListener("click", (e) => {
+                const btnEliminar = e.target.closest("[data-accion='eliminar-fila']");
+                if (btnEliminar) {
+                    const fila = btnEliminar.closest("tr");
+                    if (fila) {
+                        fila.remove();
+                        calcularTotalGeneral();
+                    }
+                }
+            });
+        }
+
         formNuevaVenta.addEventListener("submit", guardarNuevaVenta);
     }
 
-    // Lógica del modal de cliente rápido en nueva venta
+    // 3. Lógica del modal de cliente rápido en nueva venta
     const modalCliente = document.getElementById("modalNuevoCliente");
     const btnAbrirModal = document.getElementById("btnAbrirModalCliente");
     const btnCerrarModal = document.getElementById("btnCerrarModalCliente");
@@ -84,13 +112,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (btnAbrirModal && modalCliente) {
         btnAbrirModal.addEventListener("click", () => {
-            modalCliente.style.display = "flex";
+            modalCliente.classList.add("activo");
         });
     }
 
     if (btnCerrarModal && modalCliente) {
         btnCerrarModal.addEventListener("click", () => {
-            modalCliente.style.display = "none";
+            modalCliente.classList.remove("activo");
             if (formClienteModal) formClienteModal.reset();
         });
     }
@@ -123,12 +151,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (res.ok && data.success) {
                     mostrarToast("Cliente registrado con éxito.", "exito");
                     formClienteModal.reset();
-                    modalCliente.style.display = "none";
+                    if (modalCliente) modalCliente.classList.remove("activo");
                     await cargarSelectClientes();
-                    
+
                     if (data.id_cliente) {
                         const selectCliente = document.getElementById("selectCliente");
-                        if (selectCliente) selectCliente.value = data.id_cliente;
+                        if (selectCliente) selectCliente.value = String(data.id_cliente);
                     }
                 } else {
                     mostrarToast(data.message || "No se pudo registrar el cliente.", "error");
@@ -148,10 +176,10 @@ async function cargarVentas(avisar = false) {
         const inputBuscador = document.getElementById("inputBuscador");
         const termino = inputBuscador ? inputBuscador.value.trim() : "";
 
-        const url = termino 
-            ? `../api/ventas/listar.php?q=${encodeURIComponent(termino)}` 
+        const url = termino
+            ? `../api/ventas/listar.php?q=${encodeURIComponent(termino)}`
             : "../api/ventas/listar.php";
-            
+
         const res = await fetch(url);
         const data = await res.json();
         const ventas = Array.isArray(data) ? data : (data.ventas || data.data || []);
@@ -174,43 +202,43 @@ async function cargarVentas(avisar = false) {
         if (ventas.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="5" style="text-align: center; padding: 2rem;">
-                        <p style="margin-bottom: 1rem; color: #94a3b8;">No hay ventas registradas.</p>
-                        <button type="button" class="secondary" onclick="limpiarYRecargar()" style="display: inline-block; width: auto; padding: 0.5rem 1.2rem;">Actualizar</button>
+                    <td colspan="5" class="celda-vacia">
+                        <p class="texto-vacio">No hay ventas registradas.</p>
+                        <button type="button" class="secondary btn-inline-auto" data-accion="limpiar-ventas">Actualizar</button>
                     </td>
                 </tr>`;
             if (totalElem) totalElem.innerHTML = "<strong>Total:</strong> 0 ventas";
-            if (spanTotalVentas) spanTotalVentas.textContent = "$0.00";
+            if (spanTotalVentas) spanTotalVentas.textContent = formatoPesos.format(0);
             return;
         }
 
         let recaudacionTotal = 0;
 
-        ventas.forEach(v => {
-            const idVenta = v.id_venta;
-            const totalNum = parseFloat(v.total || 0);
+        ventas.forEach((v) => {
+            const idVenta = Number(v.id_venta);
+            const totalNum = Number.parseFloat(v.total || 0);
             recaudacionTotal += totalNum;
 
-            const clienteNombre = v.apellido 
-                ? `${escapeHtml(v.apellido)}, ${escapeHtml(v.nombre)}` 
-                : 'Consumidor Final';
-            const vendedorNombre = escapeHtml(v.vendedor || 'Sistema');
+            const clienteNombre = v.apellido
+                ? `${escapeHtml(v.apellido)}, ${escapeHtml(v.nombre)}`
+                : "Consumidor Final";
+            const vendedorNombre = escapeHtml(v.vendedor || "Sistema");
 
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${escapeHtml(v.fecha_venta)}</td>
                 <td><strong>${clienteNombre}</strong></td>
-                <td><span style="color: #64748b; font-size: 0.9rem;">${vendedorNombre}</span></td>
+                <td><span class="texto-vendedor">${vendedorNombre}</span></td>
                 <td>$ ${totalNum.toFixed(2)}</td>
                 <td class="col-acciones">
-                    <button type="button" onclick="anularVenta(${idVenta})" class="btn-tabla-eliminar">Anular</button>
+                    <button type="button" data-accion="anular-venta" data-id="${idVenta}" class="btn-tabla-eliminar">Anular</button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
 
         if (totalElem) totalElem.innerHTML = `<strong>Total:</strong> ${ventas.length} venta(s)`;
-        if (spanTotalVentas) spanTotalVentas.textContent = `$${recaudacionTotal.toFixed(2)}`;
+        if (spanTotalVentas) spanTotalVentas.textContent = formatoPesos.format(recaudacionTotal);
     } catch (err) {
         mostrarToast("Error al cargar el historial de ventas.", "error");
     }
@@ -218,7 +246,7 @@ async function cargarVentas(avisar = false) {
 
 async function anularVenta(id_venta) {
     if (!confirm("¿Estás seguro de que querés anular esta venta? Se restaurará el stock de los productos.")) return;
-    
+
     try {
         const res = await fetch("../api/ventas/baja.php", {
             method: "POST",
@@ -226,8 +254,8 @@ async function anularVenta(id_venta) {
             body: JSON.stringify({ id_venta })
         });
         const data = await res.json();
-        
-        if (data.success) {
+
+        if (res.ok && data.success) {
             mostrarToast("Venta anulada y stock restaurado.", "exito");
             cargarVentas(false);
         } else {
@@ -255,8 +283,12 @@ async function cargarSelectClientes() {
         if (!select) return;
 
         select.innerHTML = '<option value="" disabled selected>-- Seleccione un cliente --</option>';
-        clientes.forEach(c => {
-            select.innerHTML += `<option value="${c.id_cliente}">${escapeHtml(c.nombre)} ${escapeHtml(c.apellido)} (Tel: ${escapeHtml(c.telefono)})</option>`;
+        clientes.forEach((c) => {
+            const id = Number(c.id_cliente);
+            const nombre = escapeHtml(c.nombre);
+            const apellido = escapeHtml(c.apellido);
+            const telefono = escapeHtml(c.telefono || "Sin teléfono");
+            select.innerHTML += `<option value="${id}">${nombre} ${apellido} (Tel: ${telefono})</option>`;
         });
     } catch (err) {
         mostrarToast("Error al cargar la lista de clientes.", "error");
@@ -281,19 +313,23 @@ function agregarFilaCarrito() {
     tr.className = "fila-carrito";
 
     let optionsHtml = '<option value="" disabled selected>-- Seleccione producto --</option>';
-    listaProductosGlobal.forEach(p => {
-        if (parseInt(p.stock) > 0) {
-            optionsHtml += `<option value="${p.id_producto}" data-precio="${p.precio}" data-stock="${p.stock}">${escapeHtml(p.nombre)} (Stock: ${p.stock})</option>`;
+    listaProductosGlobal.forEach((p) => {
+        const stock = Number.parseInt(p.stock, 10) || 0;
+        if (stock > 0) {
+            const idProd = Number(p.id_producto);
+            const precio = Number.parseFloat(p.precio) || 0;
+            const nombreProd = escapeHtml(p.nombre);
+            optionsHtml += `<option value="${idProd}" data-precio="${precio}" data-stock="${stock}">${nombreProd} (Stock: ${stock})</option>`;
         }
     });
 
     tr.innerHTML = `
-        <td><select class="prod-select" required style="margin-bottom:0;">${optionsHtml}</select></td>
+        <td><select class="prod-select input-tabla-compacto" required>${optionsHtml}</select></td>
         <td class="lbl-precio">$0.00</td>
-        <td><input type="number" class="prod-cant" min="1" value="1" required style="margin-bottom:0;"></td>
+        <td><input type="number" class="prod-cant input-tabla-compacto" min="1" value="1" required></td>
         <td class="lbl-subtotal">$0.00</td>
-        <td style="text-align: center;">
-            <button type="button" class="btn-accion-tabla" onclick="eliminarFilaCarrito(this)">Eliminar</button>
+        <td class="col-acciones">
+            <button type="button" class="btn-accion-tabla" data-accion="eliminar-fila">Eliminar</button>
         </td>
     `;
 
@@ -303,7 +339,7 @@ function agregarFilaCarrito() {
 
     selectProd.addEventListener("change", (e) => {
         const opt = e.target.options[e.target.selectedIndex];
-        const precio = parseFloat(opt.dataset.precio) || 0;
+        const precio = Number.parseFloat(opt.dataset.precio) || 0;
         lblPrecio.textContent = `$${precio.toFixed(2)}`;
         actualizarFilaSubtotal(tr);
     });
@@ -313,20 +349,15 @@ function agregarFilaCarrito() {
     tbody.appendChild(tr);
 }
 
-function eliminarFilaCarrito(boton) {
-    boton.closest("tr").remove();
-    calcularTotalGeneral();
-}
-
 function actualizarFilaSubtotal(tr) {
     const select = tr.querySelector(".prod-select");
     const cantInput = tr.querySelector(".prod-cant");
     const lblSubtotal = tr.querySelector(".lbl-subtotal");
 
     const opt = select.options[select.selectedIndex];
-    const precio = opt && opt.dataset.precio ? parseFloat(opt.dataset.precio) : 0;
-    const stockMax = opt && opt.dataset.stock ? parseInt(opt.dataset.stock) : 9999;
-    let cantidad = parseInt(cantInput.value) || 0;
+    const precio = opt && opt.dataset.precio ? Number.parseFloat(opt.dataset.precio) : 0;
+    const stockMax = opt && opt.dataset.stock ? Number.parseInt(opt.dataset.stock, 10) : 9999;
+    let cantidad = Number.parseInt(cantInput.value, 10) || 0;
 
     if (cantidad > stockMax) {
         mostrarToast(`Stock máximo disponible: ${stockMax} unidades.`, "error");
@@ -341,16 +372,16 @@ function actualizarFilaSubtotal(tr) {
 
 function calcularTotalGeneral() {
     const form = document.getElementById("formNuevaVenta");
-    const costoServicio = form && form.dataset.costoServicio ? parseFloat(form.dataset.costoServicio) || 0 : 0;
+    const costoServicio = form && form.dataset.costoServicio ? Number.parseFloat(form.dataset.costoServicio) || 0 : 0;
 
     let totalProductos = 0;
-    document.querySelectorAll(".fila-carrito").forEach(tr => {
+    document.querySelectorAll(".fila-carrito").forEach((tr) => {
         const select = tr.querySelector(".prod-select");
         const cantInput = tr.querySelector(".prod-cant");
         if (select && select.selectedIndex > 0) {
             const opt = select.options[select.selectedIndex];
             if (opt && opt.dataset.precio) {
-                totalProductos += (parseFloat(opt.dataset.precio) || 0) * (parseInt(cantInput.value) || 0);
+                totalProductos += (Number.parseFloat(opt.dataset.precio) || 0) * (Number.parseInt(cantInput.value, 10) || 0);
             }
         }
     });
@@ -364,18 +395,18 @@ async function guardarNuevaVenta(e) {
     e.preventDefault();
 
     const form = document.getElementById("formNuevaVenta");
-    const id_cliente = document.getElementById("selectCliente").value;
-    const id_servicio = form.dataset.idServicio ? parseInt(form.dataset.idServicio) : null;
+    const id_cliente = Number(document.getElementById("selectCliente").value || 0);
+    const id_servicio = form.dataset.idServicio ? Number.parseInt(form.dataset.idServicio, 10) : null;
     const filas = document.querySelectorAll(".fila-carrito");
     const productos = [];
 
-    filas.forEach(tr => {
+    filas.forEach((tr) => {
         const selectProd = tr.querySelector(".prod-select");
         const cantInput = tr.querySelector(".prod-cant");
         if (selectProd && selectProd.value && cantInput) {
-            const id_producto = selectProd.value;
-            const cantidad = parseInt(cantInput.value);
-            if (id_producto && cantidad > 0) {
+            const id_producto = Number(selectProd.value);
+            const cantidad = Number.parseInt(cantInput.value, 10);
+            if (id_producto > 0 && cantidad > 0) {
                 productos.push({ id_producto, cantidad });
             }
         }
@@ -401,7 +432,9 @@ async function guardarNuevaVenta(e) {
 
         if (res.ok && resultado.success) {
             mostrarToast(resultado.message, "exito");
-            setTimeout(() => window.location.href = "indice.php", 1500);
+            setTimeout(() => {
+                window.location.href = "indice.php";
+            }, 1500);
         } else {
             mostrarToast(resultado.message || "Error al registrar la venta.", "error");
         }
@@ -416,12 +449,12 @@ async function guardarNuevaVenta(e) {
 function mostrarToast(mensaje, tipo = "exito") {
     const container = document.getElementById("toastContainer");
     if (!container) return;
-    
+
     const toast = document.createElement("div");
     toast.className = `toast-notificacion ${tipo}`;
     toast.textContent = mensaje;
     container.appendChild(toast);
-    
+
     setTimeout(() => toast.classList.add("visible"), 10);
     setTimeout(() => {
         toast.classList.remove("visible");
@@ -429,7 +462,13 @@ function mostrarToast(mensaje, tipo = "exito") {
     }, 3000);
 }
 
+const formatoPesos = new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    maximumFractionDigits: 0
+});
+
 function escapeHtml(text) {
-    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-    return String(text || '').replace(/[&<>"']/g, m => map[m]);
+    const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+    return String(text || "").replace(/[&<>"']/g, (m) => map[m]);
 }

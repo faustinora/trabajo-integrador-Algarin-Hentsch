@@ -20,18 +20,22 @@ if ($id_usuario <= 0) {
     exit();
 }
 
-// Protección de auto-desactivación
-if (isset($_SESSION['id_usuario']) && $_SESSION['id_usuario'] == $id_usuario) {
+if (isset($_SESSION['id_usuario']) && (int)$_SESSION['id_usuario'] === $id_usuario) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'No puedes desactivar tu propio usuario activo.']);
     exit();
 }
 
-$stmt = $conn->prepare("UPDATE usuarios SET activo = 0 WHERE id_usuario = ?");
+$stmt = $conn->prepare("UPDATE usuarios SET activo = 0 WHERE id_usuario = ? AND activo = 1");
 $stmt->bind_param("i", $id_usuario);
 
 if ($stmt->execute()) {
-    echo json_encode(['success' => true, 'message' => 'Usuario dado de baja correctamente.']);
+    if ($stmt->affected_rows > 0) {
+        echo json_encode(['success' => true, 'message' => 'Usuario dado de baja correctamente.']);
+    } else {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'El usuario no existe o ya está inactivo.']);
+    }
 } else {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Error al dar de baja al usuario.']);

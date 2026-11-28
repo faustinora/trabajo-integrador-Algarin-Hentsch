@@ -51,29 +51,29 @@ if (!isset($_SESSION['usuario'])) {
         </form>
     </main>
 
-    <div id="modalCliente" class="modal-overlay" style="display: none;">
-    <div class="modal-content contenedor-mediano">
-        <h3>Registrar Nuevo Cliente</h3>
-        <form id="formModalCliente">
-            <label for="modal_apellido">Apellido
-                <input type="text" id="modal_apellido" required>
-            </label>
-            <label for="modal_nombre">Nombre
-                <input type="text" id="modal_nombre" required>
-            </label>
-            <label for="modal_telefono">Teléfono
-                <input type="text" id="modal_telefono">
-            </label>
-            <label for="modal_email">Email (opcional)
-                <input type="email" id="modal_email">
-            </label>
-            <div class="modal-acciones" style="display: flex; gap: 1rem; margin-top: 1rem;">
-                <button type="submit" class="btn-principal">Guardar Cliente</button>
-                <button type="button" id="btnCerrarModal" class="secondary">Cancelar</button>
-            </div>
-        </form>
+    <div id="modalCliente" class="modal-overlay">
+        <div class="modal-content contenedor-mediano">
+            <h3>Registrar Nuevo Cliente</h3>
+            <form id="formModalCliente">
+                <label for="modal_apellido">Apellido
+                    <input type="text" id="modal_apellido" required>
+                </label>
+                <label for="modal_nombre">Nombre
+                    <input type="text" id="modal_nombre" required>
+                </label>
+                <label for="modal_telefono">Teléfono
+                    <input type="text" id="modal_telefono">
+                </label>
+                <label for="modal_email">Email (opcional)
+                    <input type="email" id="modal_email">
+                </label>
+                <div class="modal-acciones">
+                    <button type="submit" class="btn-principal">Guardar</button>
+                    <button type="button" id="btnCerrarModal" class="secondary">Cancelar</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
     <div id="toastContainer"></div>
     <script src="../js/servicios.js"></script>

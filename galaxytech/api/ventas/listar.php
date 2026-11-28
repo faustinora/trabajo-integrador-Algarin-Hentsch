@@ -3,7 +3,8 @@ session_start();
 header('Content-Type: application/json; charset=UTF-8');
 
 if (!isset($_SESSION['usuario'])) {
-    echo json_encode([]);
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'No autorizado.']);
     exit();
 }
 

@@ -1,5 +1,6 @@
+const ESTADOS_SERVICIO = ["pendiente", "en proceso", "completado", "entregado"];
+
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Detección automática de la vista activa según los elementos del DOM
     if (document.getElementById("tabla-servicios-body")) {
         inicializarIndiceServicios();
     }
@@ -11,62 +12,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-
-//indice lista
+// --- LISTADO / ÍNDICE ---
 function inicializarIndiceServicios() {
     cargarServicios(false);
 
     const inputBuscador = document.getElementById("inputBuscador");
     const selectEstado = document.getElementById("selectFiltroEstado");
     const btnBuscar = document.getElementById("btnBuscar");
-
-    const btnNuevoClienteModal = document.getElementById("btnNuevoClienteModal");
-    const modalCliente = document.getElementById("modalCliente");
-    const btnCerrarModal = document.getElementById("btnCerrarModal");
-    const formModalCliente = document.getElementById("formModalCliente");
-
-    if (btnNuevoClienteModal && modalCliente) {
-        btnNuevoClienteModal.addEventListener("click", () => {
-        modalCliente.style.display = "flex";
-        }); 
-    }
-
-    if (btnCerrarModal && modalCliente) {
-        btnCerrarModal.addEventListener("click", () => {
-        modalCliente.style.display = "none";
-        formModalCliente.reset();
-        });
-    }
-
-    if (formModalCliente) {
-        formModalCliente.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const apellido = document.getElementById("modal_apellido").value.trim();
-        const nombre = document.getElementById("modal_nombre").value.trim();
-        const telefono = document.getElementById("modal_telefono").value.trim();
-        const email = document.getElementById("modal_email").value.trim();
-
-        try {
-            const res = await fetch("../api/clientes/guardar.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nombre, apellido, telefono, email })
-            });
-            const data = await res.json();
-            if (res.ok && data.success) {
-                mostrarToast("Cliente registrado.", "exito");
-                modalCliente.style.display = "none";
-                formModalCliente.reset();
-                await cargarSelectClientes();
-            } else {
-                mostrarToast(data.message || "No se pudo registrar.", "error");
-            }
-        } catch (err) {
-            mostrarToast("Error de conexión al registrar cliente.", "error");
-        }
-    });
-}
-
+    const tbody = document.getElementById("tabla-servicios-body");
 
     if (inputBuscador) {
         inputBuscador.addEventListener("keydown", (e) => {
@@ -87,6 +40,46 @@ function inicializarIndiceServicios() {
     if (selectEstado) {
         selectEstado.addEventListener("change", () => cargarServicios(false));
     }
+
+    if (tbody) {
+        tbody.addEventListener("click", (e) => {
+            const btnLimpiar = e.target.closest("[data-accion='limpiar']");
+            if (btnLimpiar) {
+                limpiarYRecargar();
+                return;
+            }
+
+            const btnBaja = e.target.closest("[data-accion='baja']");
+            if (btnBaja) {
+                const idServicio = Number(btnBaja.dataset.id);
+                if (idServicio > 0) {
+                    darDeBajaServicio(idServicio);
+                }
+            }
+        });
+    }
+}
+
+function renderBadgeEstado(estado) {
+    const est = ESTADOS_SERVICIO.includes(String(estado || "").toLowerCase().trim())
+        ? String(estado).toLowerCase().trim()
+        : "pendiente";
+
+    const clases = {
+        "pendiente": "badge-estado badge-pendiente",
+        "en proceso": "badge-estado badge-proceso",
+        "completado": "badge-estado badge-completado",
+        "entregado": "badge-estado badge-entregado"
+    };
+
+    const etiquetas = {
+        "pendiente": "Pendiente",
+        "en proceso": "En Proceso",
+        "completado": "Completado",
+        "entregado": "Entregado"
+    };
+
+    return `<span class="${clases[est]}">${escapeHtml(etiquetas[est])}</span>`;
 }
 
 async function cargarServicios(avisar = false) {
@@ -95,12 +88,14 @@ async function cargarServicios(avisar = false) {
         const selectEstado = document.getElementById("selectFiltroEstado");
 
         const termino = inputBuscador ? inputBuscador.value.trim() : "";
-        const estado = selectEstado ? selectEstado.value : "";
+        const estado = selectEstado ? selectEstado.value : "todos";
 
-        let url = `../api/servicios/listar.php?status=${estado}`;
-        if (termino) url += `&q=${encodeURIComponent(termino)}`;
+        const params = new URLSearchParams({ status: estado });
+        if (termino) {
+            params.set("q", termino);
+        }
 
-        const res = await fetch(url);
+        const res = await fetch(`../api/servicios/listar.php?${params.toString()}`);
         const data = await res.json();
         const servicios = Array.isArray(data) ? data : (data.servicios || data.data || []);
 
@@ -121,36 +116,42 @@ async function cargarServicios(avisar = false) {
         if (servicios.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan='6' style='text-align: center; padding: 2rem;'>
-                        <p style="margin-bottom: 1rem; color: #94a3b8;">No se encontraron servicios técnicos.</p>
-                        <button type="button" class="secondary" onclick="limpiarYRecargar()" style="display: inline-block; width: auto; padding: 0.5rem 1.2rem;">Actualizar</button>
+                    <td colspan="6" class="celda-vacia">
+                        <p class="texto-vacio">No se encontraron servicios técnicos.</p>
+                        <button type="button" class="secondary btn-inline-auto" data-accion="limpiar">Actualizar</button>
                     </td>
                 </tr>`;
             if (totalElem) totalElem.innerHTML = "<strong>Total:</strong> 0 servicios";
             return;
         }
 
-        servicios.forEach(s => {
-            const idServ = s.id_servicio;
-            const idCliente = s.id_cliente;
-            const costo = parseFloat(s.costo) || 0;
-            const cliente = `${escapeHtml(s.cliente_apellido)}, ${escapeHtml(s.cliente_nombre)}`;
+        servicios.forEach((s) => {
+            const idServ = Number(s.id_servicio);
+            const idCliente = Number(s.id_cliente);
+            const costo = Number.parseFloat(s.costo) || 0;
+            const cliente = `${escapeHtml(s.cliente_nombre)} ${escapeHtml(s.cliente_apellido)}`;
+            const est = String(s.estado || "").toLowerCase().trim();
+            const badgeEstado = renderBadgeEstado(est);
 
-            let badgeColor = "#e2e8f0";
-            let textColor = "#1e293b";
-            const est = (s.estado || "").toLowerCase();
-            
-            if (est === 'completado') { badgeColor = '#bbf7d0'; textColor = '#166534'; }
-            else if (est === 'en proceso') { badgeColor = '#bfdbfe'; textColor = '#1e40af'; }
-            else if (est === 'pendiente') { badgeColor = '#fef08a'; textColor = '#854d0e'; }
-            else if (est === 'entregado') { badgeColor = '#e9d5ff'; textColor = '#6b21a8'; }
+            let accionesHtml = "";
 
-            const badgeEstado = `<span style="background-color: ${badgeColor}; color: ${textColor}; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; text-transform: capitalize;">${escapeHtml(s.estado)}</span>`;
-
-            // Botón de cobro visible solo si está completado (o según prefieras)
-            let btnCobrarHtml = '';
-            if (est === 'completado') {
-                btnCobrarHtml = `<a href="../ventas/nueva.php?id_servicio=${idServ}&id_cliente=${idCliente}&costo=${costo}&equipo=${encodeURIComponent(s.equipo_descripcion)}" class="btn-principal" style="padding: 4px 8px; font-size: 0.8rem; text-decoration: none; display: inline-block; background-color: #16a34a; margin-right: 4px;">Cobrar</a>`;
+            if (est === "completado") {
+                const queryCobro = new URLSearchParams({
+                    id_servicio: String(idServ),
+                    id_cliente: String(idCliente),
+                    costo: String(costo),
+                    equipo: String(s.equipo_descripcion || "")
+                });
+                accionesHtml = `
+                    <a href="../ventas/nueva.php?${queryCobro.toString()}" class="btn-principal btn-accion-sm btn-cobrar">Cobrar</a>
+                `;
+            } else if (est === "entregado") {
+                accionesHtml = `<span class="texto-entregado">Entregado</span>`;
+            } else {
+                accionesHtml = `
+                    <a href="editar.php?id=${idServ}" class="btn-secundario btn-accion-sm">Editar</a>
+                    <button type="button" data-accion="baja" data-id="${idServ}" class="btn-tabla-eliminar btn-accion-sm">Baja</button>
+                `;
             }
 
             const tr = document.createElement("tr");
@@ -159,15 +160,11 @@ async function cargarServicios(avisar = false) {
                 <td><strong>${cliente}</strong></td>
                 <td>
                     <div>${escapeHtml(s.equipo_descripcion)}</div>
-                    <small style="color: #64748b;">${escapeHtml(s.diagnostico || 'Sin diagnóstico previo')}</small>
+                    <small class="texto-secundario">${escapeHtml(s.diagnostico || "Sin diagnóstico previo")}</small>
                 </td>
                 <td>$ ${costo.toFixed(2)}</td>
                 <td>${badgeEstado}</td>
-                <td class="col-acciones">
-                    ${btnCobrarHtml}
-                    <a href="editar.php?id=${idServ}" class="secondary btn-tabla-editar">Editar</a>
-                    <button onclick="eliminarServicio(${idServ})" class="btn-tabla-eliminar">Baja</button>
-                </td>
+                <td class="col-acciones">${accionesHtml}</td>
             `;
             tbody.appendChild(tr);
         });
@@ -178,8 +175,9 @@ async function cargarServicios(avisar = false) {
     }
 }
 
-async function eliminarServicio(id_servicio) {
+async function darDeBajaServicio(id_servicio) {
     if (!confirm("¿Estás seguro de dar de baja este servicio técnico?")) return;
+
     try {
         const res = await fetch("../api/servicios/baja.php", {
             method: "POST",
@@ -187,9 +185,10 @@ async function eliminarServicio(id_servicio) {
             body: JSON.stringify({ id_servicio })
         });
         const data = await res.json();
-        if (data.success) {
+
+        if (res.ok && data.success) {
             mostrarToast("Servicio dado de baja correctamente.", "exito");
-            cargarServicios();
+            cargarServicios(false);
         } else {
             mostrarToast(data.message || "No se pudo dar de baja.", "error");
         }
@@ -206,78 +205,93 @@ function limpiarYRecargar() {
     cargarServicios(false);
 }
 
-
-//nuevo
-function inicializarNuevoServicio() {
-    cargarSelectClientes();
-
+// --- MODAL COMPARTIDO DE CLIENTE ---
+function configurarModalCliente(onClienteCreado = null) {
     const btnNuevoClienteModal = document.getElementById("btnNuevoClienteModal");
     const modalCliente = document.getElementById("modalCliente");
     const btnCerrarModal = document.getElementById("btnCerrarModal");
     const formModalCliente = document.getElementById("formModalCliente");
 
-    if (btnNuevoClienteModal && modalCliente) {
-        btnNuevoClienteModal.addEventListener("click", () => {
-            modalCliente.style.display = "flex";
-        });
-    }
+    if (!btnNuevoClienteModal || !modalCliente || !formModalCliente) return;
 
-    if (btnCerrarModal && modalCliente) {
+    btnNuevoClienteModal.addEventListener("click", () => {
+        modalCliente.classList.add("activo");
+    });
+
+    if (btnCerrarModal) {
         btnCerrarModal.addEventListener("click", () => {
-            modalCliente.style.display = "none";
-            if (formModalCliente) formModalCliente.reset();
+            modalCliente.classList.remove("activo");
+            formModalCliente.reset();
         });
     }
 
-    if (formModalCliente) {
-        formModalCliente.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const apellido = document.getElementById("modal_apellido").value.trim();
-            const nombre = document.getElementById("modal_nombre").value.trim();
-            const telefono = document.getElementById("modal_telefono").value.trim();
-            const email = document.getElementById("modal_email").value.trim();
+    formModalCliente.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const apellido = document.getElementById("modal_apellido").value.trim();
+        const nombre = document.getElementById("modal_nombre").value.trim();
+        const telefono = document.getElementById("modal_telefono").value.trim();
+        const email = document.getElementById("modal_email").value.trim();
 
-            if (!apellido || !nombre) {
-                mostrarToast("Nombre y apellido son obligatorios.", "error");
-                return;
-            }
+        if (!apellido || !nombre) {
+            mostrarToast("Nombre y apellido son obligatorios.", "error");
+            return;
+        }
 
-            try {
-                const res = await fetch("../api/clientes/guardar.php", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ nombre, apellido, telefono, email })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    mostrarToast("Cliente registrado.", "exito");
-                    modalCliente.style.display = "none";
-                    formModalCliente.reset();
-                    await cargarSelectClientes();
-                    if (data.id_cliente) {
-                        const selectCliente = document.getElementById("selectCliente");
-                        if (selectCliente) selectCliente.value = data.id_cliente;
-                    }
-                } else {
-                    mostrarToast(data.message || "No se pudo registrar.", "error");
+        try {
+            const res = await fetch("../api/clientes/guardar.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nombre, apellido, telefono, email })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                mostrarToast("Cliente registrado.", "exito");
+                modalCliente.classList.remove("activo");
+                formModalCliente.reset();
+                if (typeof onClienteCreado === "function") {
+                    await onClienteCreado(data);
                 }
-            } catch (err) {
-                mostrarToast("Error de conexión al registrar cliente.", "error");
+            } else {
+                mostrarToast(data.message || "No se pudo registrar.", "error");
             }
-        });
-    }
+        } catch (err) {
+            mostrarToast("Error de conexión al registrar cliente.", "error");
+        }
+    });
+}
 
-    document.getElementById("formNuevoServicio").addEventListener("submit", async (e) => {
+// --- NUEVO SERVICIO ---
+function inicializarNuevoServicio() {
+    cargarSelectClientes();
+
+    configurarModalCliente(async (data) => {
+        await cargarSelectClientes();
+        if (data && data.id_cliente) {
+            const selectCliente = document.getElementById("selectCliente");
+            if (selectCliente) selectCliente.value = data.id_cliente;
+        }
+    });
+
+    const formNuevo = document.getElementById("formNuevoServicio");
+    if (!formNuevo) return;
+
+    formNuevo.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const costoVal = parseFloat(document.getElementById("costo").value);
+        const costoVal = Number.parseFloat(document.getElementById("costo").value);
         const datos = {
-            id_cliente: document.getElementById("selectCliente").value,
+            id_cliente: Number(document.getElementById("selectCliente").value),
             equipo_descripcion: document.getElementById("equipo_descripcion").value.trim(),
             diagnostico: document.getElementById("diagnostico").value.trim(),
             costo: Number.isNaN(costoVal) ? 0 : costoVal,
             estado: document.getElementById("estado").value
         };
+
+        if (!datos.id_cliente || !datos.equipo_descripcion) {
+            mostrarToast("Seleccione un cliente y describa el equipo.", "error");
+            return;
+        }
 
         if (datos.costo < 0) {
             mostrarToast("El costo no puede ser negativo.", "error");
@@ -294,7 +308,9 @@ function inicializarNuevoServicio() {
 
             if (res.ok && resultado.success) {
                 mostrarToast(resultado.message, "exito");
-                setTimeout(() => window.location.href = "indice.php", 1500);
+                setTimeout(() => {
+                    window.location.href = "indice.php";
+                }, 1500);
             } else {
                 mostrarToast(resultado.message || "Error al registrar el servicio.", "error");
             }
@@ -310,51 +326,75 @@ async function cargarSelectClientes() {
         const clientes = await res.json();
         const select = document.getElementById("selectCliente");
         if (!select) return;
+
         select.innerHTML = '<option value="" disabled selected>-- Seleccione un cliente --</option>';
-        clientes.forEach(c => {
-            select.innerHTML += `<option value="${c.id_cliente}">${c.nombre}, ${c.apellido} (${c.telefono})</option>`;
+        clientes.forEach((c) => {
+            const id = Number(c.id_cliente);
+            const nombre = escapeHtml(c.nombre);
+            const apellido = escapeHtml(c.apellido);
+            const telefono = escapeHtml(c.telefono || "Sin teléfono");
+            select.innerHTML += `<option value="${id}">${nombre}, ${apellido} (${telefono})</option>`;
         });
     } catch (err) {
         mostrarToast("Error al cargar clientes", "error");
     }
 }
 
-
-//editar
+// --- EDITAR SERVICIO ---
 function inicializarEditarServicio() {
-    const id = document.getElementById("id_servicio").value;
+    const id = Number(document.getElementById("id_servicio")?.value || 0);
+    if (id <= 0) return;
 
-    // Cargar datos actuales al iniciar
     (async () => {
         try {
             const res = await fetch("../api/servicios/listar.php?status=todos");
             const servicios = await res.json();
-            const servicio = servicios.find(s => s.id_servicio == id);
+            const servicio = Array.isArray(servicios)
+                ? servicios.find((s) => Number(s.id_servicio) === id)
+                : null;
 
             if (servicio) {
-                document.getElementById("equipo_descripcion").value = servicio.equipo_descripcion;
-                document.getElementById("diagnostico").value = servicio.diagnostico || '';
-                document.getElementById("costo").value = servicio.costo;
-                document.getElementById("estado").value = servicio.estado;
+                document.getElementById("equipo_descripcion").value = servicio.equipo_descripcion || "";
+                document.getElementById("diagnostico").value = servicio.diagnostico || "";
+                document.getElementById("costo").value = servicio.costo ?? 0;
+                document.getElementById("estado").value = ESTADOS_SERVICIO.includes(servicio.estado)
+                    ? servicio.estado
+                    : "pendiente";
             } else {
                 mostrarToast("No se encontró el servicio.", "error");
-                setTimeout(() => window.location.href = "indice.php", 1500);
+                setTimeout(() => {
+                    window.location.href = "indice.php";
+                }, 1500);
             }
         } catch (err) {
             mostrarToast("Error al cargar los datos del servicio.", "error");
         }
     })();
 
-    document.getElementById("formEditarServicio").addEventListener("submit", async (e) => {
+    const formEditar = document.getElementById("formEditarServicio");
+    if (!formEditar) return;
+
+    formEditar.addEventListener("submit", async (e) => {
         e.preventDefault();
 
+        const costoVal = Number.parseFloat(document.getElementById("costo").value);
         const datos = {
-            id_servicio: document.getElementById("id_servicio").value,
+            id_servicio: id,
             equipo_descripcion: document.getElementById("equipo_descripcion").value.trim(),
             diagnostico: document.getElementById("diagnostico").value.trim(),
-            costo: parseFloat(document.getElementById("costo").value) || 0,
+            costo: Number.isNaN(costoVal) ? 0 : costoVal,
             estado: document.getElementById("estado").value
         };
+
+        if (!datos.equipo_descripcion) {
+            mostrarToast("La descripción del equipo es obligatoria.", "error");
+            return;
+        }
+
+        if (datos.costo < 0) {
+            mostrarToast("El costo no puede ser negativo.", "error");
+            return;
+        }
 
         try {
             const res = await fetch("../api/servicios/actualizar.php", {
@@ -366,7 +406,9 @@ function inicializarEditarServicio() {
 
             if (res.ok && resultado.success) {
                 mostrarToast(resultado.message, "exito");
-                setTimeout(() => window.location.href = "indice.php", 1500);
+                setTimeout(() => {
+                    window.location.href = "indice.php";
+                }, 1500);
             } else {
                 mostrarToast(resultado.message || "Error al actualizar.", "error");
             }
@@ -376,10 +418,7 @@ function inicializarEditarServicio() {
     });
 }
 
-
-
-   //UTILIDADES GLOBALES (Toasts y Seguridad HTML)
-
+// --- UTILIDADES GLOBALES ---
 function mostrarToast(mensaje, tipo = "exito") {
     const container = document.getElementById("toastContainer");
     if (!container) return;
@@ -395,6 +434,6 @@ function mostrarToast(mensaje, tipo = "exito") {
 }
 
 function escapeHtml(text) {
-    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-    return String(text || '').replace(/[&<>"']/g, m => map[m]);
+    const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+    return String(text || "").replace(/[&<>"']/g, (m) => map[m]);
 }

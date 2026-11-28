@@ -20,11 +20,16 @@ if ($id_producto <= 0) {
     exit();
 }
 
-$stmt = $conn->prepare("UPDATE productos SET activo = 0 WHERE id_producto = ?");
+$stmt = $conn->prepare("UPDATE productos SET activo = 0 WHERE id_producto = ? AND activo = 1");
 $stmt->bind_param("i", $id_producto);
 
 if ($stmt->execute()) {
-    echo json_encode(['success' => true, 'message' => 'Producto dado de baja.']);
+    if ($stmt->affected_rows > 0) {
+        echo json_encode(['success' => true, 'message' => 'Producto dado de baja.']);
+    } else {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'El producto no existe o ya está inactivo.']);
+    }
 } else {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Error al dar de baja.']);

@@ -21,7 +21,19 @@ $email = trim($datos['email'] ?? '');
 
 if ($id_cliente <= 0 || empty($nombre) || empty($apellido) || empty($telefono)) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios.']);
+    echo json_encode(['success' => false, 'message' => 'Nombre, apellido y teléfono son obligatorios.']);
+    exit();
+}
+
+if (!preg_match('/^[0-9]+$/', $telefono)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'El teléfono debe contener únicamente números.']);
+    exit();
+}
+
+if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'El formato del correo electrónico no es válido.']);
     exit();
 }
 
@@ -29,7 +41,12 @@ $stmt = $conn->prepare("UPDATE clientes SET nombre = ?, apellido = ?, telefono =
 $stmt->bind_param("ssssi", $nombre, $apellido, $telefono, $email, $id_cliente);
 
 if ($stmt->execute()) {
-    echo json_encode(['success' => true, 'message' => 'Cliente actualizado.']);
+    if ($stmt->affected_rows > 0) {
+        echo json_encode(['success' => true, 'message' => 'Cliente actualizado.']);
+    } else {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'No se encontró el cliente o no hubo cambios.']);
+    }
 } else {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Error al actualizar.']);

@@ -16,17 +16,23 @@ $datos = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 $id_usuario = (int)($datos['id_usuario'] ?? 0);
 $usuario    = trim($datos['usuario'] ?? '');
 $clave      = trim($datos['clave'] ?? '');
-$rol        = trim($datos['rol'] ?? '');
-$activo     = isset($datos['activo']) ? (int)$datos['activo'] : 1;
+$rol        = strtolower(trim($datos['rol'] ?? ''));
+$activo     = ((int)($datos['activo'] ?? 1) === 0) ? 0 : 1;
+$rolesValidos = ['admin', 'vendedor'];
 
-if ($id_usuario <= 0 || empty($usuario) || empty($rol)) {
+if ($id_usuario <= 0 || empty($usuario) || !in_array($rol, $rolesValidos, true)) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Faltan campos obligatorios.']);
+    echo json_encode(['success' => false, 'message' => 'Datos inválidos o incompletos.']);
     exit();
 }
 
-// Verificar que el nombre no pertenezca a otro usuario
-$stmtCheck = $conn->prepare("SELECT id_usuario FROM usuarios WHERE usuario = ? AND id_usuario != ?");
+if (isset($_SESSION['id_usuario']) && (int)$_SESSION['id_usuario'] === $id_usuario && $activo === 0) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'No puedes desactivar tu propio usuario activo.']);
+    exit();
+}
+
+$stmtCheck = $conn->prepare("SELECT id_usuario FROM usuarios WHERE usuario = ? AND id_usuario != ? LIMIT 1");
 $stmtCheck->bind_param("si", $usuario, $id_usuario);
 $stmtCheck->execute();
 $stmtCheck->store_result();

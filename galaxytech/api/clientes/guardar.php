@@ -24,23 +24,26 @@ if (empty($nombre) || empty($apellido) || empty($telefono)) {
     exit();
 }
 
-// 2. Controlar que el teléfono contenga ÚNICAMENTE números
 if (!preg_match('/^[0-9]+$/', $telefono)) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'El teléfono debe contener únicamente números.']);
     exit();
 }
 
-// 3. Validar formato de email
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'El formato del correo electrónico no es válido.']);
     exit();
 }
 
-// 4. Controlar que no se repita el teléfono o el email (datos únicos de contacto)
-$stmtCheck = $conn->prepare("SELECT id_cliente FROM clientes WHERE telefono = ? OR email = ?");
-$stmtCheck->bind_param("ss", $telefono, $email);
+if ($email !== '') {
+    $stmtCheck = $conn->prepare("SELECT id_cliente FROM clientes WHERE telefono = ? OR email = ? LIMIT 1");
+    $stmtCheck->bind_param("ss", $telefono, $email);
+} else {
+    $stmtCheck = $conn->prepare("SELECT id_cliente FROM clientes WHERE telefono = ? LIMIT 1");
+    $stmtCheck->bind_param("s", $telefono);
+}
+
 $stmtCheck->execute();
 $stmtCheck->store_result();
 
@@ -58,7 +61,11 @@ $stmt->bind_param("ssss", $nombre, $apellido, $telefono, $email);
 
 if ($stmt->execute()) {
     http_response_code(201);
-    echo json_encode(['success' => true, 'message' => 'Cliente registrado exitosamente.']);
+    echo json_encode([
+        'success' => true,
+        'id_cliente' => (int)$conn->insert_id,
+        'message' => 'Cliente registrado exitosamente.'
+    ]);
 } else {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Error al guardar en la base de datos.']);

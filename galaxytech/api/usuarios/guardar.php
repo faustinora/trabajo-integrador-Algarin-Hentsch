@@ -15,16 +15,16 @@ $datos = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 
 $usuario = trim($datos['usuario'] ?? '');
 $clave   = trim($datos['clave'] ?? '');
-$rol     = trim($datos['rol'] ?? '');
+$rol     = strtolower(trim($datos['rol'] ?? ''));
+$rolesValidos = ['admin', 'vendedor'];
 
-if (empty($usuario) || empty($clave) || empty($rol)) {
+if (empty($usuario) || empty($clave) || !in_array($rol, $rolesValidos, true)) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios.']);
+    echo json_encode(['success' => false, 'message' => 'Usuario, clave y rol válido son obligatorios.']);
     exit();
 }
 
-// Verificar duplicados
-$stmtCheck = $conn->prepare("SELECT id_usuario FROM usuarios WHERE usuario = ?");
+$stmtCheck = $conn->prepare("SELECT id_usuario FROM usuarios WHERE usuario = ? LIMIT 1");
 $stmtCheck->bind_param("s", $usuario);
 $stmtCheck->execute();
 $stmtCheck->store_result();
@@ -45,7 +45,11 @@ $stmt->bind_param("sss", $usuario, $clave_hash, $rol);
 
 if ($stmt->execute()) {
     http_response_code(201);
-    echo json_encode(['success' => true, 'message' => 'Usuario registrado exitosamente.']);
+    echo json_encode([
+        'success' => true,
+        'id_usuario' => (int)$conn->insert_id,
+        'message' => 'Usuario registrado exitosamente.'
+    ]);
 } else {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Error al guardar en la base de datos.']);

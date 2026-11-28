@@ -20,11 +20,16 @@ if ($id_usuario <= 0) {
     exit();
 }
 
-$stmt = $conn->prepare("UPDATE usuarios SET activo = 1 WHERE id_usuario = ?");
+$stmt = $conn->prepare("UPDATE usuarios SET activo = 1 WHERE id_usuario = ? AND activo = 0");
 $stmt->bind_param("i", $id_usuario);
 
 if ($stmt->execute()) {
-    echo json_encode(['success' => true, 'message' => 'Usuario habilitado nuevamente.']);
+    if ($stmt->affected_rows > 0) {
+        echo json_encode(['success' => true, 'message' => 'Usuario habilitado nuevamente.']);
+    } else {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'El usuario no existe o ya está activo.']);
+    }
 } else {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Error al habilitar el usuario.']);

@@ -3,7 +3,8 @@ session_start();
 header('Content-Type: application/json; charset=UTF-8');
 
 if (!isset($_SESSION['usuario'])) {
-    echo json_encode([]);
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'No autorizado.']);
     exit();
 }
 
@@ -13,21 +14,25 @@ $conn = getConnection();
 $busqueda = trim($_GET['q'] ?? '');
 $estado = $_GET['status'] ?? '1';
 
-$sql = "SELECT * FROM clientes WHERE 1=1";
-
-if ($estado !== 'todos') {
-    $estadoInt = (int)$estado;
-    $sql .= " AND activo = $estadoInt";
-}
-
+$sql = "SELECT id_cliente, nombre, apellido, telefono, email, activo FROM clientes WHERE 1=1";
 $params = [];
 $types = "";
+
+if ($estado !== 'todos') {
+    $estadoInt = ((int)$estado === 0) ? 0 : 1;
+    $sql .= " AND activo = ?";
+    $params[] = $estadoInt;
+    $types .= "i";
+}
 
 if (!empty($busqueda)) {
     $sql .= " AND (nombre LIKE ? OR apellido LIKE ? OR telefono LIKE ? OR email LIKE ?)";
     $term = "%$busqueda%";
-    $params = [$term, $term, $term, $term];
-    $types = "ssss";
+    $params[] = $term;
+    $params[] = $term;
+    $params[] = $term;
+    $params[] = $term;
+    $types .= "ssss";
 }
 
 $sql .= " ORDER BY id_cliente ASC";

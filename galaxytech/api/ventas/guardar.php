@@ -11,7 +11,7 @@ if (!isset($_SESSION['usuario'])) {
 require_once '../../config/conexion.php';
 $conn = getConnection();
 
-$id_usuario = $_SESSION['id_usuario'] ?? $_SESSION['id'] ?? 0;
+$id_usuario = (int)($_SESSION['id_usuario'] ?? $_SESSION['id'] ?? 0);
 if ($id_usuario <= 0) {
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'Sesión de usuario no válida.']);
@@ -32,13 +32,12 @@ if ($id_cliente <= 0) {
 $conn->begin_transaction();
 
 try {
-    $totalVenta = 0;
+    $totalVenta = 0.0;
     $itemsValidados = [];
-    $costoServicio = 0;
-
+    $costoServicio = 0.0;
 
     if ($id_servicio !== null) {
-        $stmtServ = $conn->prepare("SELECT id_servicio, costo, estado, activo FROM servicios WHERE id_servicio = ? FOR UPDATE");
+        $stmtServ = $conn->prepare("SELECT id_servicio, id_cliente, costo, estado, activo FROM servicios WHERE id_servicio = ? FOR UPDATE");
         $stmtServ->bind_param("i", $id_servicio);
         $stmtServ->execute();
         $serv = $stmtServ->get_result()->fetch_assoc();
@@ -48,10 +47,17 @@ try {
             throw new Exception("El servicio técnico no existe o está dado de baja.");
         }
 
-        if (strtolower(trim($serv['estado'])) === 'entregado') {
-            throw new Exception("Este servicio ya fue cobrado y marcado como entregado.");
+        if ((int)$serv['id_cliente'] !== $id_cliente) {
+            throw new Exception("El cliente seleccionado no coincide con el servicio técnico.");
         }
 
+        $estadoServ = strtolower(trim((string)$serv['estado']));
+        if ($estadoServ === 'entregado') {
+            throw new Exception("Este servicio ya fue cobrado y marcado como entregado.");
+        }
+        if ($estadoServ !== 'completado') {
+            throw new Exception("Solo se pueden cobrar servicios en estado completado.");
+        }
 
         $stmtDup = $conn->prepare("
             SELECT dv.id_detalle_venta
@@ -73,7 +79,6 @@ try {
         $totalVenta += $costoServicio;
     }
 
-    
     foreach ($productos as $item) {
         $id_producto = (int)($item['id_producto'] ?? 0);
         $cantidad = (int)($item['cantidad'] ?? 0);
@@ -93,7 +98,7 @@ try {
         }
 
         if ((int)$prod['stock'] < $cantidad) {
-            throw new Exception("Stock insuficiente para el producto ID $id_producto (Disponible: " . $prod['stock'] . ").");
+            throw new Exception("Stock insuficiente para el producto ID $id_producto (Disponible: " . (int)$prod['stock'] . ").");
         }
 
         $precioUnitario = (float)$prod['precio'];
@@ -116,38 +121,45 @@ try {
         throw new Exception("El total de la venta debe ser mayor a 0.");
     }
 
-    
     $stmtVenta = $conn->prepare("INSERT INTO ventas (id_cliente, id_usuario, total, fecha_venta, estado) VALUES (?, ?, ?, NOW(), 1)");
     $stmtVenta->bind_param("iid", $id_cliente, $id_usuario, $totalVenta);
-    $stmtVenta->execute();
-    $id_venta = $conn->insert_id;
+    if (!$stmtVenta->execute()) {
+        throw new Exception("No se pudo registrar la cabecera de la venta.");
+    }
+    $id_venta = (int)$conn->insert_id;
     $stmtVenta->close();
 
-    
     if ($id_servicio !== null) {
         $cantServicio = 1;
         $stmtDetServ = $conn->prepare("INSERT INTO detalle_ventas (id_venta, id_producto, id_servicio, cantidad, precio_unitario) VALUES (?, NULL, ?, ?, ?)");
         $stmtDetServ->bind_param("iiid", $id_venta, $id_servicio, $cantServicio, $costoServicio);
-        $stmtDetServ->execute();
+        if (!$stmtDetServ->execute()) {
+            throw new Exception("No se pudo registrar el servicio en el detalle de venta.");
+        }
         $stmtDetServ->close();
 
-        $stmtUpdServ = $conn->prepare("UPDATE servicios SET estado = 'entregado', fecha_entrega = NOW() WHERE id_servicio = ?");
+        $stmtUpdServ = $conn->prepare("UPDATE servicios SET estado = 'entregado', fecha_entrega = NOW() WHERE id_servicio = ? AND activo = 1");
         $stmtUpdServ->bind_param("i", $id_servicio);
-        $stmtUpdServ->execute();
+        if (!$stmtUpdServ->execute() || $stmtUpdServ->affected_rows === 0) {
+            throw new Exception("No se pudo actualizar el estado del servicio.");
+        }
         $stmtUpdServ->close();
     }
 
-    
     if (!empty($itemsValidados)) {
         $stmtDetalle = $conn->prepare("INSERT INTO detalle_ventas (id_venta, id_producto, id_servicio, cantidad, precio_unitario) VALUES (?, ?, NULL, ?, ?)");
-        $stmtStock = $conn->prepare("UPDATE productos SET stock = ? WHERE id_producto = ?");
+        $stmtStock = $conn->prepare("UPDATE productos SET stock = ? WHERE id_producto = ? AND activo = 1");
 
         foreach ($itemsValidados as $item) {
             $stmtDetalle->bind_param("iiid", $id_venta, $item['id_producto'], $item['cantidad'], $item['precio_unitario']);
-            $stmtDetalle->execute();
+            if (!$stmtDetalle->execute()) {
+                throw new Exception("No se pudo guardar el detalle de un producto.");
+            }
 
             $stmtStock->bind_param("ii", $item['nuevo_stock'], $item['id_producto']);
-            $stmtStock->execute();
+            if (!$stmtStock->execute() || $stmtStock->affected_rows === 0) {
+                throw new Exception("No se pudo actualizar el stock del producto.");
+            }
         }
 
         $stmtDetalle->close();
@@ -158,11 +170,11 @@ try {
     http_response_code(201);
     echo json_encode([
         'success' => true,
+        'id_venta' => $id_venta,
         'message' => $id_servicio !== null
             ? 'Servicio cobrado y marcado como entregado.'
             : 'Venta registrada con éxito.'
     ]);
-
 } catch (Exception $e) {
     $conn->rollback();
     http_response_code(400);

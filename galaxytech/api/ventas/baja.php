@@ -42,19 +42,23 @@ try {
     $resDetalles = $stmtDetalles->get_result();
 
     $stmtStockRest = $conn->prepare("UPDATE productos SET stock = stock + ? WHERE id_producto = ?");
-    $stmtServReset = $conn->prepare("UPDATE servicios SET estado = 'completado', fecha_entrega = NULL WHERE id_servicio = ?");
+    $stmtServReset = $conn->prepare("UPDATE servicios SET estado = 'completado', fecha_entrega = NULL WHERE id_servicio = ? AND activo = 1");
 
     while ($det = $resDetalles->fetch_assoc()) {
         if (!empty($det['id_producto']) && (int)$det['cantidad'] > 0) {
             $cant = (int)$det['cantidad'];
             $idProd = (int)$det['id_producto'];
             $stmtStockRest->bind_param("ii", $cant, $idProd);
-            $stmtStockRest->execute();
+            if (!$stmtStockRest->execute()) {
+                throw new Exception("No se pudo restaurar el stock del producto.");
+            }
         }
         if (!empty($det['id_servicio'])) {
             $idServ = (int)$det['id_servicio'];
             $stmtServReset->bind_param("i", $idServ);
-            $stmtServReset->execute();
+            if (!$stmtServReset->execute()) {
+                throw new Exception("No se pudo revertir el estado del servicio.");
+            }
         }
     }
     $stmtDetalles->close();
@@ -63,12 +67,13 @@ try {
 
     $stmtBaja = $conn->prepare("UPDATE ventas SET estado = 0 WHERE id_venta = ?");
     $stmtBaja->bind_param("i", $id_venta);
-    $stmtBaja->execute();
+    if (!$stmtBaja->execute() || $stmtBaja->affected_rows === 0) {
+        throw new Exception("No se pudo anular la venta.");
+    }
     $stmtBaja->close();
 
     $conn->commit();
     echo json_encode(['success' => true, 'message' => 'Venta anulada, stock restaurado y servicio revertido a completado.']);
-
 } catch (Exception $e) {
     $conn->rollback();
     http_response_code(400);

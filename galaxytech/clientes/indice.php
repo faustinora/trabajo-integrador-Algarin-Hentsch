@@ -4,7 +4,7 @@ if (!isset($_SESSION['usuario'])) {
     header("Location: ../login.php");
     exit();
 }
-$panelVolver = ($_SESSION['rol'] === 'admin') ? '../panelAdmin.php' : '../panelVendedor.php';
+$panelVolver = (($_SESSION['rol'] ?? '') === 'admin') ? '../panelAdmin.php' : '../panelVendedor.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -15,7 +15,7 @@ $panelVolver = ($_SESSION['rol'] === 'admin') ? '../panelAdmin.php' : '../panelV
 </head>
 <body>
     <main class="container contenedor-principal">
-        <a href="<?php echo $panelVolver; ?>" class="link-volver">← Volver al Panel</a>
+        <a href="<?php echo htmlspecialchars($panelVolver, ENT_QUOTES, 'UTF-8'); ?>" class="link-volver">← Volver al Panel</a>
 
         <div class="header-gestion">
             <h1>Gestión de Clientes</h1>
@@ -24,7 +24,7 @@ $panelVolver = ($_SESSION['rol'] === 'admin') ? '../panelAdmin.php' : '../panelV
 
         <div class="buscador-inline-container">
             <input type="text" id="inputBuscador" placeholder="Buscar por apellido, nombre, teléfono o email...">
-            
+
             <select id="selectFiltroEstado" class="filtro-estado-wrapper">
                 <option value="1">Activos</option>
                 <option value="0">Inactivos</option>
@@ -49,7 +49,7 @@ $panelVolver = ($_SESSION['rol'] === 'admin') ? '../panelAdmin.php' : '../panelV
                 <tbody id="tabla-clientes-body"></tbody>
             </table>
         </div>
-        
+
         <footer>
             <small id="totalRegistros"><strong>Total:</strong> 0 clientes</small>
         </footer>

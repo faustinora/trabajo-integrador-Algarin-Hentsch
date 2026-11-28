@@ -3,6 +3,7 @@ session_start();
 header('Content-Type: application/json; charset=UTF-8');
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'admin') {
+    http_response_code(401);
     echo json_encode(["status" => "error", "mensaje" => "No autorizado"]);
     exit();
 }
@@ -10,16 +11,14 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'admin') {
 require_once '../../config/conexion.php';
 $conn = getConnection();
 
-// 1. Indicadores (KPIs) principales
-$totalClientes = $conn->query("SELECT COUNT(*) as total FROM clientes WHERE activo = 1 AND id_cliente != 1")->fetch_assoc()['total'] ?? 0;
-$stockBajo = $conn->query("SELECT COUNT(*) as total FROM productos WHERE activo = 1 AND stock <= 3")->fetch_assoc()['total'] ?? 0;
-$serviciosPendientes = $conn->query("SELECT COUNT(*) as total FROM servicios WHERE activo = 1 AND estado = 'pendiente'")->fetch_assoc()['total'] ?? 0;
-$totalVentasMonto = $conn->query("SELECT SUM(total) as suma FROM ventas WHERE estado = 1")->fetch_assoc()['suma'] ?? 0;
+$totalClientes = (int)($conn->query("SELECT COUNT(*) AS total FROM clientes WHERE activo = 1 AND id_cliente != 1")->fetch_assoc()['total'] ?? 0);
+$stockBajo = (int)($conn->query("SELECT COUNT(*) AS total FROM productos WHERE activo = 1 AND stock <= 3")->fetch_assoc()['total'] ?? 0);
+$serviciosPendientes = (int)($conn->query("SELECT COUNT(*) AS total FROM servicios WHERE activo = 1 AND estado = 'pendiente'")->fetch_assoc()['total'] ?? 0);
+$totalVentasMonto = (float)($conn->query("SELECT SUM(total) AS suma FROM ventas WHERE estado = 1")->fetch_assoc()['suma'] ?? 0);
 
-// 1b. Lista detallada de productos con stock bajo (para el modal)
-$sqlListaStockBajo = "SELECT codigo, nombre, stock 
-                      FROM productos 
-                      WHERE activo = 1 AND stock <= 3 
+$sqlListaStockBajo = "SELECT codigo, nombre, stock
+                      FROM productos
+                      WHERE activo = 1 AND stock <= 3
                       ORDER BY stock ASC";
 $resListaStock = $conn->query($sqlListaStockBajo);
 $listaStockBajo = [];
@@ -29,7 +28,6 @@ if ($resListaStock) {
     }
 }
 
-// 2. Informe 1: Top 5 Productos más vendidos
 $sqlProductosTop = "SELECT p.nombre, SUM(dv.cantidad) AS total_vendido
                     FROM detalle_ventas dv
                     INNER JOIN productos p ON dv.id_producto = p.id_producto
@@ -46,7 +44,6 @@ if ($resProductosTop) {
     }
 }
 
-// 3. Informe 2: Top 5 Clientes con mayor actividad (Compras + Servicios)
 $sqlClientesTop = "SELECT c.nombre, c.apellido,
                           SUM(op.es_venta) AS total_ventas,
                           SUM(op.es_servicio) AS total_servicios,

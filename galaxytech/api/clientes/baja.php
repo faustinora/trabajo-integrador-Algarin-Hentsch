@@ -20,11 +20,16 @@ if ($id_cliente <= 0) {
     exit();
 }
 
-$stmt = $conn->prepare("UPDATE clientes SET activo = 0 WHERE id_cliente = ?");
+$stmt = $conn->prepare("UPDATE clientes SET activo = 0 WHERE id_cliente = ? AND activo = 1");
 $stmt->bind_param("i", $id_cliente);
 
 if ($stmt->execute()) {
-    echo json_encode(['success' => true, 'message' => 'Cliente dado de baja correctamente.']);
+    if ($stmt->affected_rows > 0) {
+        echo json_encode(['success' => true, 'message' => 'Cliente dado de baja correctamente.']);
+    } else {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'El cliente no existe o ya está inactivo.']);
+    }
 } else {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Error al dar de baja al cliente.']);
