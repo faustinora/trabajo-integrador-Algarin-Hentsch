@@ -71,11 +71,20 @@ try {
         ];
     }
 
-    // 2. Insertar cabecera en la tabla 'ventas'
-    $stmtVenta = $conn->prepare("INSERT INTO ventas (id_cliente, id_usuario, total, fecha_venta, activo) VALUES (?, ?, ?, NOW(), 1)");
+    if ($id_servicio === null && empty($itemsValidados)) {
+        throw new Exception("Debe agregar al menos un producto para registrar la venta.");
+    }
+
+    if ($totalVenta <= 0 && $id_servicio === null) {
+        throw new Exception("El total de la venta debe ser mayor a 0.");
+    }
+
+    $stmtVenta = $conn->prepare("INSERT INTO ventas (id_cliente, id_usuario, total, fecha_venta, estado) VALUES (?, ?, ?, NOW(), 1)");
     $stmtVenta->bind_param("iid", $id_cliente, $id_usuario, $totalVenta);
-    $stmtVenta->execute();
-    $id_venta = $conn->insert_id;
+    if (!$stmtVenta->execute()) {
+        throw new Exception("No se pudo registrar la cabecera de la venta.");
+    }
+    $id_venta = (int)$conn->insert_id;
     $stmtVenta->close();
 
     // 3. Insertar en 'detalle_ventas' y actualizar el stock de cada producto
